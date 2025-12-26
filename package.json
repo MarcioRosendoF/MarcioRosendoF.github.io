@@ -1,0 +1,19 @@
+{
+  "name": "devlog-portfolio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"(no tests)\"",
+    "dev": "tailwindcss -i ./css/input.css -o ./css/output.css --watch",
+    "build": "tailwindcss -i ./css/input.css -o ./css/output.css --minify"
+  },
+  "keywords": [],
+  "author": "Márcio Rosendo",
+  "license": "ISC",
+  "description": "Dev.Log – Portfolio of Márcio Rosendo, Gameplay Programmer.",
+  "devDependencies": {
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18"
+  }
+}
