@@ -31,14 +31,7 @@ html {
     --modal-nav-gap: 4.5rem;
 }
 
-body {
-    opacity: 0;
-    transition: opacity 0.15s ease-in;
-}
-
-body.fonts-loaded {
-    opacity: 1;
-}
+body.fonts-loaded {}
 
 .hero-title-ghost {
     color: rgba(255, 255, 255, 0.6);

@@ -16,9 +16,11 @@
     <link rel="canonical" href="https://marciorosendo.com/" />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
-    <link rel="preload" href="./css/output.css" as="style">
-    <link rel="preload" href="./fonts/JetBrainsMono-Regular.ttf" as="font" type="font/ttf" crossorigin>
-    <link rel="preload" href="./fonts/JetBrainsMono-Bold.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="./css/output.css" as="style" fetchpriority="high">
+    <link rel="preload" href="./fonts/JetBrainsMono-Regular.ttf" as="font" type="font/ttf" crossorigin
+        fetchpriority="high">
+    <link rel="preload" href="./fonts/JetBrainsMono-Bold.ttf" as="font" type="font/ttf" crossorigin
+        fetchpriority="high">
     <link rel="preload" href="./Images/MinhaFoto.webp" as="image" fetchpriority="high">
 
     <meta property="og:type" content="website" />
@@ -66,14 +68,17 @@
         gtag('js', new Date());
 
         window.addEventListener('load', () => {
-            const script = document.createElement('script');
-            script.async = true;
-            script.src = "https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75";
-            document.head.appendChild(script);
+            setTimeout(() => {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = "https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75";
+                document.head.appendChild(script);
 
-            gtag('config', 'G-CL2RRJNB75', {
-                send_page_view: true
-            });
+                gtag('config', 'G-CL2RRJNB75', {
+                    send_page_view: true,
+                    page_path: window.location.pathname
+                });
+            }, 3000);
         });
     </script>
 
@@ -448,7 +453,7 @@
                 <div class="hero-cta-block flex flex-col items-center xl:items-end gap-6">
                     <p class="max-w-3xl xl:max-w-md text-muted text-[clamp(1.05rem,2.2vw,1.5rem)] xl:text-lg leading-relaxed font-mono text-center xl:text-right"
                         data-translate="hero_description">
-                        Game programmer focused on building responsive game systems and polished player interactions
+                        Game Programmer focused on building responsive game systems and refined player interactions
                         using
                         <span class=\"text-white font-bold\">C#</span> and <span class=\"text-white
                             font-bold\">Unity</span>.

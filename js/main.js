@@ -356,7 +356,12 @@ function translatePage(isInitialLoad = false) {
         } else if (element.tagName === "META") {
           element.content = TRANSLATIONS[key];
         } else {
-          element.innerHTML = TRANSLATIONS[key];
+          const val = TRANSLATIONS[key];
+          if (val.indexOf('<') === -1) {
+            element.textContent = val;
+          } else {
+            element.innerHTML = val;
+          }
         }
       }
     });
@@ -660,9 +665,9 @@ class BaseHighlight {
       return baseDuration;
     }
 
-    const lampRect = this.lamp.getBoundingClientRect();
+    const lampRect = this.lamp.dataset.cachedRect ? JSON.parse(this.lamp.dataset.cachedRect) : this.lamp.getBoundingClientRect();
     const targetRect = element.getBoundingClientRect();
-    const containerRect = this.container ? this.container.getBoundingClientRect() : null;
+    const containerRect = this.container ? (this.container.dataset.cachedRect ? JSON.parse(this.container.dataset.cachedRect) : this.container.getBoundingClientRect()) : null;
 
     if (
       !lampRect.width ||
@@ -817,7 +822,7 @@ class NavbarHighlight extends BaseHighlight {
 
   updateHighlight() {
     if (this.activeElement) {
-      this.activeElement.offsetHeight;
+
 
       const pos = this._calculatePosition(this.activeElement);
       gsap.set(this.lamp, {
