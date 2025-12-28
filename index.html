@@ -14,7 +14,10 @@
         content="Gameplay Programmer, Game Developer, Unity, C#, Portfolio, Márcio Rosendo, Game Programmer" />
 
     <link rel="canonical" href="https://marciorosendo.com/" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <link rel="preload" href="./fonts/JetBrainsMono-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="./fonts/JetBrainsMono-Bold.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="preload" href="./Images/MinhaFoto.webp" as="image" fetchpriority="high">
 
     <meta property="og:type" content="website" />
@@ -56,14 +59,20 @@
     }
     </script>
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
 
-        gtag('config', 'G-CL2RRJNB75', {
-            send_page_view: true
+        window.addEventListener('load', () => {
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = "https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75";
+            document.head.appendChild(script);
+
+            gtag('config', 'G-CL2RRJNB75', {
+                send_page_view: true
+            });
         });
     </script>
 

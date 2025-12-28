@@ -954,89 +954,89 @@ class LanguageHighlight extends BaseHighlight {
     this.activeElement = null;
   }
 
-init() {
-  this.container = document.getElementById(this.containerId);
-  if (!this.container) return;
+  init() {
+    this.container = document.getElementById(this.containerId);
+    if (!this.container) return;
 
-  this.wrapper = this.container.parentElement;
-  this.container.setAttribute("data-active-lang", LANG);
+    this.wrapper = this.container.parentElement;
+    this.container.setAttribute("data-active-lang", LANG);
 
-  this.items = Array.from(this.container.querySelectorAll(".lang-btn"));
-  this.hoverOutline = document.getElementById(this.hoverOutlineId);
-  this.lamp = document.getElementById(this.lampId);
+    this.items = Array.from(this.container.querySelectorAll(".lang-btn"));
+    this.hoverOutline = document.getElementById(this.hoverOutlineId);
+    this.lamp = document.getElementById(this.lampId);
 
-  if (!this.items.length || !this.hoverOutline || !this.lamp) {
-    console.warn("LanguageHighlight: Missing required elements");
-    return;
+    if (!this.items.length || !this.hoverOutline || !this.lamp) {
+      console.warn("LanguageHighlight: Missing required elements");
+      return;
+    }
+
+    this._setupHoverListeners();
+    this._initializePosition();
   }
 
-  this._setupHoverListeners();
-  this._initializePosition();
-}
+  _getAnimationTargets() {
+    return [this.wrapper];
+  }
 
-_getAnimationTargets() {
-  return [this.wrapper];
-}
+  _shouldSlideOnHide() {
+    const bottomLayoutQuery = window.matchMedia(
+      "(max-width: 880px), (max-height: 540px)",
+    );
+    return !bottomLayoutQuery.matches;
+  }
 
-_shouldSlideOnHide() {
-  const bottomLayoutQuery = window.matchMedia(
-    "(max-width: 880px), (max-height: 540px)",
-  );
-  return !bottomLayoutQuery.matches;
-}
+  setActive(element) {
+    if (!element || this.isTranslating) return;
 
-setActive(element) {
-  if (!element || this.isTranslating) return;
+    this.activeElement = element;
+    this._animateToElement(element);
+  }
 
-  this.activeElement = element;
-  this._animateToElement(element);
-}
+  updateHighlight() {
+    if (!this.lamp || !this.activeElement) return;
 
-updateHighlight() {
-  if (!this.lamp || !this.activeElement) return;
+    this.activeElement.offsetHeight;
 
-  this.activeElement.offsetHeight;
-
-  const pos = this._calculatePosition(this.activeElement);
-  gsap.set(this.lamp, {
-    left: pos.left,
-    width: pos.width,
-    opacity: 1,
-  });
-}
-
-_initializePosition() {
-  const activeLang = LANG || this.container.getAttribute("data-active-lang");
-  const activeBtn = this.container.querySelector(
-    `[data-lang="${activeLang}"]`,
-  );
-
-  if (activeBtn) {
-    this.activeElement = activeBtn;
-    const pos = this._calculatePosition(activeBtn);
+    const pos = this._calculatePosition(this.activeElement);
     gsap.set(this.lamp, {
       left: pos.left,
       width: pos.width,
       opacity: 1,
     });
   }
-}
 
-_animateToElement(element, duration = 0.3) {
-  const adaptiveDuration = this._getAdaptiveDuration(element, duration, {
-    min: 0.16,
-    max: duration,
-  });
+  _initializePosition() {
+    const activeLang = LANG || this.container.getAttribute("data-active-lang");
+    const activeBtn = this.container.querySelector(
+      `[data-lang="${activeLang}"]`,
+    );
 
-  const pos = this._calculatePosition(element);
-  gsap.to(this.lamp, {
-    left: pos.left,
-    width: pos.width,
-    opacity: 1,
-    duration: adaptiveDuration,
-    ease: "power2.out",
-  });
-}
+    if (activeBtn) {
+      this.activeElement = activeBtn;
+      const pos = this._calculatePosition(activeBtn);
+      gsap.set(this.lamp, {
+        left: pos.left,
+        width: pos.width,
+        opacity: 1,
+      });
+    }
+  }
+
+  _animateToElement(element, duration = 0.3) {
+    const adaptiveDuration = this._getAdaptiveDuration(element, duration, {
+      min: 0.16,
+      max: duration,
+    });
+
+    const pos = this._calculatePosition(element);
+    gsap.to(this.lamp, {
+      left: pos.left,
+      width: pos.width,
+      opacity: 1,
+      duration: adaptiveDuration,
+      ease: "power2.out",
+    });
+  }
 }
 
 const languageHighlight = new LanguageHighlight();
@@ -1183,7 +1183,16 @@ const initThreeJS = () => {
     renderer.render(scene, camera);
   };
 
-  animate(0);
+  gsap.set(canvas, { opacity: 0 });
+
+  setTimeout(() => {
+    requestAnimationFrame(animate);
+    gsap.to(canvas, {
+      opacity: 1,
+      duration: 1.5,
+      ease: "power2.inOut",
+    });
+  }, 400);
 
   window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
