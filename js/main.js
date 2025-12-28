@@ -623,8 +623,7 @@ class BaseHighlight {
 
     const lampRect = this.lamp.getBoundingClientRect();
     const targetRect = element.getBoundingClientRect();
-    const containerRect =
-      (this.container && this.container.getBoundingClientRect()) || null;
+    const containerRect = this.container ? this.container.getBoundingClientRect() : null;
 
     if (
       !lampRect.width ||
@@ -664,7 +663,6 @@ class BaseHighlight {
   }
 
   _calculatePosition(element) {
-    element.offsetHeight;
     return {
       left: element.offsetLeft,
       width: element.offsetWidth,
@@ -3278,7 +3276,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 window.addEventListener("load", () => {
-  initThreeJS();
+  if (!DeviceDetector.isMobile) {
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(() => initThreeJS(), { timeout: 2000 });
+    } else {
+      setTimeout(initThreeJS, 1);
+    }
+  } else {
+    const canvas = document.getElementById("webgl-canvas");
+    if (canvas) canvas.style.display = "none";
+  }
+
   if (typeof lucide !== "undefined") {
     lucide.createIcons();
   } else {

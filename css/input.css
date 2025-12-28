@@ -6,7 +6,7 @@
     font-family: "JetBrains Mono";
     font-style: normal;
     font-weight: 400;
-    font-display: block;
+    font-display: swap;
     src: url("../fonts/JetBrainsMono-Regular.ttf") format("truetype");
 }
 
@@ -14,7 +14,7 @@
     font-family: "JetBrains Mono";
     font-style: normal;
     font-weight: 700;
-    font-display: block;
+    font-display: swap;
     src: url("../fonts/JetBrainsMono-Bold.ttf") format("truetype");
 }
 
