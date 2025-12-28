@@ -399,7 +399,7 @@ function translatePage(isInitialLoad = false) {
   gsap.killTweensOf(safeTargets);
 
   if (navbarHighlight) {
-    navbarHighlight._onScroll();
+    navbarHighlight._updateActiveSection();
     const active = navbarHighlight.activeElement;
     if (active) navbarHighlight.setActive(active);
   }
@@ -449,7 +449,7 @@ function translatePage(isInitialLoad = false) {
 
   timeline.add(() => {
     if (!navbarHighlight) return;
-    navbarHighlight._onScroll();
+    navbarHighlight._updateActiveSection();
     const active = navbarHighlight.activeElement;
     if (active) navbarHighlight.setActive(active);
   }, "enter");
@@ -773,7 +773,7 @@ class NavbarHighlight extends BaseHighlight {
     this.visibleSections = new Map();
     this.sectionElements = [];
     this.sectionIdToNavLink = new Map();
-    this._onScroll = this._onScroll.bind(this);
+    this._onSectionIntersect = this._onSectionIntersect.bind(this);
   }
 
   init() {
@@ -797,7 +797,7 @@ class NavbarHighlight extends BaseHighlight {
     }
 
     this._setupHoverListeners();
-    this._setupScrollSpy();
+    this._setupIntersectSpy();
     this._initializePosition();
   }
 
@@ -829,90 +829,65 @@ class NavbarHighlight extends BaseHighlight {
     }
   }
 
-  refreshActiveState() {
-    const sections = document.querySelectorAll("section[id]");
-    if (!sections.length) return;
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+  }
 
-    let currentSection = null;
+  _onSectionIntersect(entries) {
+    entries.forEach((entry) => {
+      this.visibleSections.set(entry.target.id, {
+        isIntersecting: entry.isIntersecting,
+        ratio: entry.intersectionRatio,
+        rect: entry.boundingClientRect,
+      });
+    });
 
-    const viewportHeight =
-      window.innerHeight || document.documentElement.clientHeight;
-    const triggerLine = viewportHeight * 0.25;
+    this._updateActiveSection();
+  }
+
+  _updateActiveSection() {
+    const viewportHeight = window.innerHeight;
+    const triggerLine = viewportHeight * 0.35;
+
+    let bestSection = null;
+
     const docHeight = document.documentElement.scrollHeight;
     const scrollY = window.scrollY || window.pageYOffset;
-    const isNearBottom = scrollY + viewportHeight >= docHeight - 2;
+    const isNearBottom = scrollY + viewportHeight >= docHeight - 15;
 
     if (isNearBottom) {
-      currentSection = sections[sections.length - 1];
+      bestSection = this.sectionElements[this.sectionElements.length - 1];
     } else {
-      for (const section of sections) {
+      for (const section of this.sectionElements) {
+        const data = this.visibleSections.get(section.id);
+        if (!data || !data.isIntersecting) continue;
+
         const rect = section.getBoundingClientRect();
         if (rect.top <= triggerLine && rect.bottom >= triggerLine) {
-          currentSection = section;
+          bestSection = section;
           break;
         }
       }
     }
 
-    if (currentSection) {
-      const navLink = document.querySelector(`a[href="#${currentSection.id}"]`);
-      if (navLink && navLink !== this.activeElement) {
-        this.activeElement = navLink;
-        this.items.forEach((item) => item.classList.remove("active"));
-        navLink.classList.add("active");
-      }
-    }
-  }
-
-  destroy() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-    window.removeEventListener("scroll", this._onScroll);
-  }
-
-  _onScroll() {
-    if (!this.sectionElements.length) return;
-
-    const viewportHeight =
-      window.innerHeight || document.documentElement.clientHeight;
-    const docHeight = document.documentElement.scrollHeight;
-    const scrollY = window.scrollY || window.pageYOffset;
-
-    const isNearBottom = scrollY + viewportHeight >= docHeight - 10;
-    if (isNearBottom) {
-      const lastSection =
-        this.sectionElements[this.sectionElements.length - 1];
-      const navLink = this.sectionIdToNavLink.get(lastSection.id);
+    if (bestSection) {
+      const navLink = this.sectionIdToNavLink.get(bestSection.id);
       if (navLink && navLink !== this.activeElement) {
         this.setActive(navLink);
       }
-      return;
-    }
-
-    const triggerLine = viewportHeight * 0.35;
-
-    let currentSection = null;
-    for (const section of this.sectionElements) {
-      const rect = section.getBoundingClientRect();
-      if (rect.top <= triggerLine && rect.bottom >= triggerLine) {
-        currentSection = section;
-        break;
-      }
-    }
-
-    if (!currentSection) return;
-
-    const navLink = this.sectionIdToNavLink.get(currentSection.id);
-    if (navLink && navLink !== this.activeElement) {
-      this.setActive(navLink);
     }
   }
 
-  _setupScrollSpy() {
+  _setupIntersectSpy() {
+    if (this.observer) this.observer.disconnect();
+
     this.sectionElements = [];
     this.sectionIdToNavLink.clear();
-    document.querySelectorAll("section[id]").forEach((section) => {
+
+    const sections = document.querySelectorAll("section[id]");
+    sections.forEach((section) => {
       const navLink = document.querySelector(`a[href="#${section.id}"]`);
       if (navLink) {
         this.sectionElements.push(section);
@@ -920,10 +895,22 @@ class NavbarHighlight extends BaseHighlight {
       }
     });
 
-    window.addEventListener("scroll", this._onScroll, { passive: true });
-    window.addEventListener("resize", this._onScroll);
+    this.observer = new IntersectionObserver(this._onSectionIntersect, {
+      root: null,
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+    });
 
-    this._onScroll();
+    this.sectionElements.forEach((section) => this.observer.observe(section));
+
+    let scrollTimeout;
+    window.addEventListener("scroll", () => {
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          this._updateActiveSection();
+          scrollTimeout = null;
+        }, 100);
+      }
+    }, { passive: true });
   }
 
   _initializePosition() {
@@ -2781,6 +2768,19 @@ function initMarquee() {
         },
       },
     });
+
+    const marqueeSection = container.closest("section");
+    if (marqueeSection && typeof ScrollTrigger !== "undefined") {
+      ScrollTrigger.create({
+        trigger: marqueeSection,
+        start: "top bottom",
+        end: "bottom top",
+        onEnter: () => marqueeTimeline.play(),
+        onLeave: () => marqueeTimeline.pause(),
+        onEnterBack: () => marqueeTimeline.play(),
+        onLeaveBack: () => marqueeTimeline.pause(),
+      });
+    }
   };
 
   if (document.fonts && document.fonts.ready) {
