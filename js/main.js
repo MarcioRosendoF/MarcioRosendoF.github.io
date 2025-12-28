@@ -72,13 +72,10 @@ function getToastContainer() {
 }
 
 
-@param   { string } messageKeyOrText
-
-
-@param   { "info" | "success" | "error" } [type = "info"]
-
-
-
+/**
+ * @param {string} messageKeyOrText
+ * @param {"info" | "success" | "error"} [type="info"]
+ */
 function showToast(messageKeyOrText, type = "info") {
   const container = getToastContainer();
   if (!container) return;
@@ -203,13 +200,10 @@ if (document.fonts && document.fonts.ready) {
 }
 
 
-@param   { string } lang
-
-
-@returns   { string }
-
-
-
+/**
+ * @param {string} lang
+ * @returns {string}
+ */
 function _getValidLanguage(lang) {
   const normalizedLang = (lang || "").toLowerCase();
   if (normalizedLang === "pt") {
@@ -946,22 +940,18 @@ function initNavbar() {
 }
 
 class LanguageHighlight extends BaseHighlight {
-
-
-
-  @param   { { containerId ?: string, lampId ?: string, hoverOutlineId ?: string } } [opts]
-
-
-
-constructor(opts = {}) {
-  super();
-  this.containerId = opts.containerId || "language-toggle";
-  this.lampId = opts.lampId || "lang-lamp";
-  this.hoverOutlineId = opts.hoverOutlineId || "lang-hover-outline";
-  this.wrapper = null;
-  this.lamp = null;
-  this.activeElement = null;
-}
+  /**
+   * @param {{ containerId?: string, lampId?: string, hoverOutlineId?: string }} [opts]
+   */
+  constructor(opts = {}) {
+    super();
+    this.containerId = opts.containerId || "language-toggle";
+    this.lampId = opts.lampId || "lang-lamp";
+    this.hoverOutlineId = opts.hoverOutlineId || "lang-hover-outline";
+    this.wrapper = null;
+    this.lamp = null;
+    this.activeElement = null;
+  }
 
 init() {
   this.container = document.getElementById(this.containerId);
@@ -1973,8 +1963,9 @@ function requestCursorSync() {
   document.dispatchEvent(new CustomEvent("cursor:sync"));
 }
 
-@returns   { void}
-
+/**
+ * @returns {void}
+ */
 function initCursor() {
   const cursor = document.getElementById("cursor");
   if (!cursor) {
@@ -2144,8 +2135,9 @@ function initCursor() {
   });
 }
 
-@returns   { void}
-
+/**
+ * @returns {void}
+ */
 function initInteractiveEffects() {
   if (MotionPreferences.prefersReducedMotion) return;
   const hasMouse = !DeviceDetector.isTouchDevice;
