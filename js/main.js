@@ -33,6 +33,45 @@ function trackEvent(name, params = {}) {
   window.gtag("event", name, params);
 }
 
+/**
+ * Helper to dynamically load a script
+ * @param {string} src
+ * @returns {Promise<void>}
+ */
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+const PRISM_ASSETS = [
+  "./assets/vendor/prism.min.js",
+  "./assets/vendor/prism-clike.min.js",
+  "./assets/vendor/prism-c.min.js",
+  "./assets/vendor/prism-cpp.min.js",
+  "./assets/vendor/prism-csharp.min.js",
+  "./assets/vendor/prism-nasm.min.js",
+];
+
+async function loadProjectPrism() {
+  if (window.Prism) return;
+  try {
+    for (const asset of PRISM_ASSETS) {
+      await loadScript(asset);
+    }
+  } catch (err) {
+    console.warn("Failed to load Prism assets:", err);
+  }
+}
+
 
 const DeviceDetector = {
   get isTouchDevice() {
@@ -1808,6 +1847,11 @@ function openProject(index) {
   lastFocusedElementBeforeModal = document.activeElement;
 
   renderModalContent(index);
+  loadProjectPrism().then(() => {
+    if (window.Prism && modalContent) {
+      Prism.highlightAllUnder(modalContent);
+    }
+  });
 
   if (modal) {
 
@@ -3190,7 +3234,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
   applyDocumentLanguage();
-  await loadTranslations(LANG, true);
+  loadTranslations(LANG, true);
 
 
   initNavbar();
