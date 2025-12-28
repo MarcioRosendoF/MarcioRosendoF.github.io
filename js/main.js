@@ -133,9 +133,12 @@ function showToast(messageKeyOrText, type = "info") {
 
 
 function getContactEmail() {
-  const localPart = ["marcio", "rosendof"].join(".");
-  const domain = ["gmail", "com"].join(".");
-  return `${localPart}@${domain}`;
+  return "contact@marciorosendo.com";
+}
+
+const FORMSUBMIT_ACTION_ID = "745f01047216c630f11b06726d99c0f1";
+function getFormSubmitAction() {
+  return `https://formsubmit.co/${FORMSUBMIT_ACTION_ID}`;
 }
 
 function initContactIdentity() {
@@ -148,7 +151,7 @@ function initContactIdentity() {
 
   const form = document.getElementById("contact-form");
   if (form) {
-    form.action = `https://formsubmit.co/${email}`;
+    form.action = getFormSubmitAction();
   }
 
   const emailCard = document.getElementById("email-card");
@@ -3002,7 +3005,7 @@ function initContactForm() {
   if (!form) return;
 
   if (!form.action) {
-    form.action = `https://formsubmit.co/${getContactEmail()}`;
+    form.action = getFormSubmitAction();
   }
   form.addEventListener("submit", handleContactSubmit);
 }
