@@ -68,17 +68,33 @@
         gtag('js', new Date());
 
         window.addEventListener('load', () => {
-            setTimeout(() => {
-                const script = document.createElement('script');
-                script.async = true;
-                script.src = "https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75";
-                document.head.appendChild(script);
+            if (typeof window.requestIdleCallback === 'function') {
+                window.requestIdleCallback(() => {
+                    setTimeout(() => {
+                        const script = document.createElement('script');
+                        script.async = true;
+                        script.src = "https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75";
+                        document.head.appendChild(script);
 
-                gtag('config', 'G-CL2RRJNB75', {
-                    send_page_view: true,
-                    page_path: window.location.pathname
+                        gtag('config', 'G-CL2RRJNB75', {
+                            send_page_view: true,
+                            page_path: window.location.pathname
+                        });
+                    }, 4000);
                 });
-            }, 3000);
+            } else {
+                setTimeout(() => {
+                    const script = document.createElement('script');
+                    script.async = true;
+                    script.src = "https://www.googletagmanager.com/gtag/js?id=G-CL2RRJNB75";
+                    document.head.appendChild(script);
+
+                    gtag('config', 'G-CL2RRJNB75', {
+                        send_page_view: true,
+                        page_path: window.location.pathname
+                    });
+                }, 5000);
+            }
         });
     </script>
 
@@ -101,12 +117,11 @@
     <link href="./css/output.css" rel="stylesheet" />
 
     <script defer src="./assets/vendor/lucide-0.480.0.min.js"></script>
-    <script defer src="./assets/vendor/three.min.js"></script>
     <script defer src="./assets/vendor/gsap.min.js"></script>
     <script defer src="./assets/vendor/ScrollTrigger.min.js"></script>
     <script defer src="./assets/vendor/lenis.min.js"></script>
     <script defer src="./js/projects-data.min.js"></script>
-    <script defer src="./js/main.min.js?v=2.1"></script>
+    <script defer src="./js/main.min.js?v=2.2"></script>
 
     <style>
         code[class*="language-"],

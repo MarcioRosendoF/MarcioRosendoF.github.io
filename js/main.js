@@ -867,9 +867,9 @@ class NavbarHighlight extends BaseHighlight {
     } else {
       for (const section of this.sectionElements) {
         const data = this.visibleSections.get(section.id);
-        if (!data || !data.isIntersecting) continue;
+        if (!data || !data.isIntersecting || !data.rect) continue;
 
-        const rect = section.getBoundingClientRect();
+        const rect = data.rect;
         if (rect.top <= triggerLine && rect.bottom >= triggerLine) {
           bestSection = section;
           break;
@@ -909,12 +909,6 @@ class NavbarHighlight extends BaseHighlight {
 
     let scrollTimeout;
     window.addEventListener("scroll", () => {
-      if (!scrollTimeout) {
-        scrollTimeout = setTimeout(() => {
-          this._updateActiveSection();
-          scrollTimeout = null;
-        }, 100);
-      }
     }, { passive: true });
   }
 
@@ -1026,8 +1020,6 @@ class LanguageHighlight extends BaseHighlight {
   updateHighlight() {
     if (!this.lamp || !this.activeElement) return;
 
-    this.activeElement.offsetHeight;
-
     const pos = this._calculatePosition(this.activeElement);
     gsap.set(this.lamp, {
       left: pos.left,
@@ -1077,7 +1069,7 @@ const heroLanguageHighlight = new LanguageHighlight({
   hoverOutlineId: "lang-hover-outline-hero",
 });
 
-const initThreeJS = () => {
+const initThreeJS = async () => {
   if (MotionPreferences.prefersReducedMotion) return;
   const canvas = document.getElementById("webgl-canvas");
   if (!canvas) {
@@ -1085,8 +1077,17 @@ const initThreeJS = () => {
     return;
   }
 
+  try {
+    if (typeof THREE === "undefined") {
+      await loadScript("./assets/vendor/three.min.js");
+    }
+  } catch (err) {
+    console.error("Failed to load Three.js dynamically:", err);
+    return;
+  }
+
   if (typeof THREE === "undefined") {
-    console.error("Three.js is not loaded!");
+    console.error("Three.js is not loaded even after dynamic pull!");
     return;
   }
 
@@ -1096,16 +1097,8 @@ const initThreeJS = () => {
   const isTablet = layout === "tablet";
   const isDesktop = layout === "desktop";
 
-  let particleCount;
-  if (isMobile) {
-    particleCount = 60;
-  } else if (isTablet) {
-    particleCount = 75;
-  } else {
-    particleCount = 120;
-  }
-
-  const particleSize = isMobile ? 0.05 : 0.04;
+  let particleCount = isTablet ? 75 : 120;
+  const particleSize = 0.04;
 
   let targetFPS;
   if (isMobile) {
@@ -1226,11 +1219,74 @@ const initThreeJS = () => {
   }, 400);
 
   window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    updateBounds();
+    if (typeof renderer !== "undefined") {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      updateBounds();
+    }
   });
+};
+
+const initMobileParticles = () => {
+  const canvas = document.getElementById("webgl-canvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const particleCount = 18;
+  const particles = [];
+  const speedMult = 0.35;
+
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  window.addEventListener("resize", resize);
+  resize();
+
+  for (let i = 0; i < particleCount; i++) {
+    const pSpeed = (Math.random() * 0.6 + 0.4);
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * speedMult * pSpeed,
+      vy: (Math.random() - 0.5) * speedMult * pSpeed,
+      size: Math.random() * 1.7 + 0.8,
+    });
+  }
+
+  const animate = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(136, 136, 136, 0.4)";
+
+    particles.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    window.mobileRafId = requestAnimationFrame(animate);
+  };
+
+  gsap.set(canvas, { opacity: 0 });
+  setTimeout(() => {
+    requestAnimationFrame(animate);
+    gsap.to(canvas, {
+      opacity: 1,
+      duration: 1.5,
+      ease: "power2.inOut",
+    });
+  }, 400);
 };
 
 const modal = document.getElementById("project-modal");
@@ -3341,8 +3397,7 @@ window.addEventListener("load", () => {
       setTimeout(initThreeJS, 1);
     }
   } else {
-    const canvas = document.getElementById("webgl-canvas");
-    if (canvas) canvas.style.display = "none";
+    initMobileParticles();
   }
 
   if (typeof lucide !== "undefined") {
