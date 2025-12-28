@@ -1207,6 +1207,65 @@ const totalProjects = projectsData.length;
 let isNavigating = false;
 let keyPressed = {};
 
+let pageScrollLockState = null;
+
+function updateModalRailOffset() {
+  const root = document.documentElement;
+  if (!root) return;
+
+  if (!modal || !modal.classList.contains("active")) {
+    root.style.setProperty("--modal-rail-offset", "0px");
+    return;
+  }
+
+  const isScrollable = modal.scrollHeight > modal.clientHeight + 1;
+  if (!isScrollable) {
+    root.style.setProperty("--modal-rail-offset", "0px");
+    return;
+  }
+
+  const width = modal.offsetWidth - modal.clientWidth;
+  root.style.setProperty("--modal-rail-offset", `${Math.max(0, width)}px`);
+}
+
+window.addEventListener("resize", () => {
+  requestAnimationFrame(updateModalRailOffset);
+});
+
+function lockPageScroll() {
+  if (pageScrollLockState) return;
+
+  const html = document.documentElement;
+  const scrollbarWidth = window.innerWidth - html.clientWidth;
+
+  pageScrollLockState = {
+    htmlOverflow: html.style.overflow,
+    bodyOverflow: body.style.overflow,
+    bodyPaddingRight: body.style.paddingRight,
+  };
+
+  html.style.overflow = "hidden";
+  body.style.overflow = "hidden";
+
+  if (scrollbarWidth > 0) {
+    const existingPadding = parseFloat(
+      window.getComputedStyle(body).paddingRight || "0",
+    );
+    body.style.paddingRight = `${existingPadding + scrollbarWidth}px`;
+  }
+}
+
+function unlockPageScroll() {
+  if (!pageScrollLockState) return;
+
+  const html = document.documentElement;
+  html.style.overflow = pageScrollLockState.htmlOverflow || "";
+  body.style.overflow = pageScrollLockState.bodyOverflow || "";
+  body.style.paddingRight = pageScrollLockState.bodyPaddingRight || "";
+
+  pageScrollLockState = null;
+}
+
 function clearModalSettleTimer() {
   if (modalSettleTimeoutId) {
     clearTimeout(modalSettleTimeoutId);
@@ -1452,7 +1511,7 @@ function _renderModalHeader(project, index) {
 
   return `
         <div class="mb-12 animate-fade-in">
-            <div class="text-sm font-mono text-muted mb-2">${TRANSLATIONS["modal_case_study"] || "CASE STUDY"}_0${index + 1}</div>
+            <div class="text-sm font-mono text-muted mb-2">${TRANSLATIONS["modal_project_index"] || "PROJECT"}_0${index + 1}</div>
             <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white">${project.title}</h1>
             ${badgesHtml}
         </div>
@@ -1754,6 +1813,10 @@ function openProject(index) {
     scheduleModalSettled();
   }
 
+  requestAnimationFrame(() => {
+    updateModalRailOffset();
+  });
+
   const closeBtn = document.getElementById("modal-close-btn");
   const prevBtn = document.getElementById("modal-prev-btn");
   const nextBtn = document.getElementById("modal-next-btn");
@@ -1794,7 +1857,8 @@ function openProject(index) {
   if (window.scrollManager) {
     window.scrollManager.pauseForModal();
   }
-  body.style.overflow = "hidden";
+
+  lockPageScroll();
 
   const isTablet = DeviceDetector.layout === "tablet";
 
@@ -1843,6 +1907,7 @@ function navigateProject(direction) {
 
     setTimeout(() => {
       modalContent.classList.remove("transitioning");
+      updateModalRailOffset();
 
       const isTablet = DeviceDetector.layout === "tablet";
 
@@ -1888,6 +1953,8 @@ function closeProject() {
     modal.setAttribute("aria-hidden", "true");
   }
 
+  updateModalRailOffset();
+
   const closeBtn = document.getElementById("modal-close-btn");
   const prevBtn = document.getElementById("modal-prev-btn");
   const nextBtn = document.getElementById("modal-next-btn");
@@ -1909,6 +1976,8 @@ function closeProject() {
     window.scrollManager.resumeAfterModal();
   }
   body.style.overflow = "";
+
+  unlockPageScroll();
 
   document.removeEventListener("keydown", handleModalFocusTrap);
   if (
@@ -2077,9 +2146,39 @@ function initCursor() {
     );
   };
 
+  const isOverScrollbar = () => {
+    const html = document.documentElement;
+
+    if (modal && modal.classList.contains("active")) {
+      const modalScrollbarWidth = modal.offsetWidth - modal.clientWidth;
+      if (modalScrollbarWidth > 0) {
+        const rect = modal.getBoundingClientRect();
+        const scrollbarStartX = rect.right - modalScrollbarWidth;
+        if (
+          mouseX >= scrollbarStartX &&
+          mouseX <= rect.right &&
+          mouseY >= rect.top &&
+          mouseY <= rect.bottom
+        ) {
+          return true;
+        }
+      }
+    }
+
+    const pageScrollbarWidth = window.innerWidth - html.clientWidth;
+    if (pageScrollbarWidth > 0) {
+      const scrollbarStartX = window.innerWidth - pageScrollbarWidth;
+      if (mouseX >= scrollbarStartX) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const syncCursorState = () => {
     const target = document.elementFromPoint(mouseX, mouseY);
-    const hide = shouldHideCursor(target);
+    const hide = shouldHideCursor(target) || isOverScrollbar();
     if (hide) {
       cursor.style.opacity = "0";
       hiddenByCursorHide = true;

@@ -25,6 +25,10 @@ html.lenis body {
 
 html {
     scroll-behavior: auto !important;
+    --modal-rail-w: 10px;
+    --modal-edge-pad: 1.5rem;
+    --modal-rail-offset: 0px;
+    --modal-nav-gap: 4.5rem;
 }
 
 body {
@@ -602,6 +606,35 @@ iframe {
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     overflow-y: auto;
     pointer-events: none;
+    scrollbar-gutter: stable;
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255, 255, 255, 0.25) rgba(255, 255, 255, 0.06);
+}
+
+#project-modal::-webkit-scrollbar {
+    width: var(--modal-rail-w);
+}
+
+#modal-close-btn {
+    right: calc(var(--modal-edge-pad) + var(--modal-rail-offset));
+}
+
+#modal-next-btn {
+    right: calc(var(--modal-edge-pad) + var(--modal-rail-offset));
+}
+
+#project-modal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+#project-modal::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 9999px;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+}
+
+#project-modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
 }
 
 @media (min-width: 768px) {
@@ -841,12 +874,16 @@ iframe {
 
     #modal-prev-btn {
         left: auto !important;
-        right: 6rem !important;
+        right: calc(var(--modal-edge-pad) + var(--modal-rail-offset) + var(--modal-nav-gap)) !important;
     }
 
     #modal-next-btn {
-        right: 1.5rem !important;
+        right: calc(var(--modal-edge-pad) + var(--modal-rail-offset)) !important;
         left: auto !important;
+    }
+
+    #modal-close-btn {
+        right: calc(var(--modal-edge-pad) + var(--modal-rail-offset)) !important;
     }
 
     .modal-nav-btn:active {
