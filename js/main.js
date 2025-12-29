@@ -2669,9 +2669,6 @@ function initTimelineAnimation() {
         mobileContainer.querySelectorAll(".timeline-tags"),
       );
 
-
-
-
       if (window.__timelineAnimationHasPlayed) {
         gsap.set(dots, {
           opacity: 1,
@@ -2696,64 +2693,69 @@ function initTimelineAnimation() {
         return;
       }
 
-
       gsap.set(dots, { opacity: 0, scale: 0 });
       gsap.set(lines, { scaleY: 0, opacity: 0, transformOrigin: "top center" });
       gsap.set(contentGroups, { opacity: 0, x: -20 });
       gsap.set(tagContainers, { opacity: 0, x: 20 });
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: mobileContainer,
-          start: "top 75%",
-          toggleActions: "play none none none",
-          once: true,
-        },
-        onComplete: () => {
-          window.__timelineAnimationHasPlayed = true;
-        },
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !window.__timelineAnimationHasPlayed) {
+            const tl = gsap.timeline({
+              onComplete: () => {
+                window.__timelineAnimationHasPlayed = true;
+                observer.disconnect();
+              },
+            });
+
+            dots.forEach((dot, index) => {
+              const line = lines[index];
+              const content = contentGroups[index];
+              const tags = tagContainers[index];
+              const startTime = index === 0 ? 0 : ">-0.1";
+
+              tl.to(
+                dot,
+                {
+                  opacity: 1,
+                  scale: 1,
+                  duration: 0.4,
+                  ease: "back.out(2)",
+                  clearProps: "transform",
+                },
+                startTime,
+              );
+
+              if (content) {
+                tl.to(
+                  content,
+                  { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
+                  "<+=0.1",
+                );
+              }
+              if (tags) {
+                tl.to(
+                  tags,
+                  { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
+                  "<+=0.1",
+                );
+              }
+              if (line) {
+                tl.to(
+                  line,
+                  { scaleY: 1, opacity: 1, duration: 0.3, ease: "none" },
+                  ">",
+                );
+              }
+            });
+          }
+        });
+      }, {
+        threshold: 0.05,
+        rootMargin: "0px 0px -50px 0px"
       });
 
-      dots.forEach((dot, index) => {
-        const line = lines[index];
-        const content = contentGroups[index];
-        const tags = tagContainers[index];
-        const startTime = index === 0 ? 0 : ">-0.1";
-
-        tl.to(
-          dot,
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.4,
-            ease: "back.out(2)",
-            clearProps: "transform",
-          },
-          startTime,
-        );
-
-        if (content) {
-          tl.to(
-            content,
-            { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
-            "<+=0.1",
-          );
-        }
-        if (tags) {
-          tl.to(
-            tags,
-            { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
-            "<+=0.1",
-          );
-        }
-        if (line) {
-          tl.to(
-            line,
-            { scaleY: 1, opacity: 1, duration: 0.3, ease: "none" },
-            ">",
-          );
-        }
-      });
+      observer.observe(mobileContainer);
     },
   });
 }
@@ -2882,16 +2884,35 @@ function initMarquee() {
     });
 
     const marqueeSection = container.closest("section");
-    if (marqueeSection && typeof ScrollTrigger !== "undefined") {
-      ScrollTrigger.create({
-        trigger: marqueeSection,
-        start: "top bottom",
-        end: "bottom top",
-        onEnter: () => marqueeTimeline.play(),
-        onLeave: () => marqueeTimeline.pause(),
-        onEnterBack: () => marqueeTimeline.play(),
-        onLeaveBack: () => marqueeTimeline.pause(),
-      });
+    if (marqueeSection) {
+      const isMobile = DeviceDetector.isMobile;
+
+      if (isMobile) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              marqueeTimeline.play();
+            } else {
+              marqueeTimeline.pause();
+            }
+          });
+        }, {
+          threshold: 0,
+          rootMargin: "0px"
+        });
+
+        observer.observe(marqueeSection);
+      } else if (typeof ScrollTrigger !== "undefined") {
+        ScrollTrigger.create({
+          trigger: marqueeSection,
+          start: "top bottom",
+          end: "bottom top",
+          onEnter: () => marqueeTimeline.play(),
+          onLeave: () => marqueeTimeline.pause(),
+          onEnterBack: () => marqueeTimeline.play(),
+          onLeaveBack: () => marqueeTimeline.pause(),
+        });
+      }
     }
   };
 
