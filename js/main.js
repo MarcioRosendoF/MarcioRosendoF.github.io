@@ -411,6 +411,10 @@ function translatePage(isInitialLoad = false) {
 
   if (isInitialLoad) {
     updateContent();
+    updateLanguageToggle();
+    if (navbarHighlight) {
+      navbarHighlight._updateActiveSection();
+    }
     animateHeroEntrance();
     return;
   }
@@ -3295,8 +3299,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
   applyDocumentLanguage();
-  loadTranslations(LANG, true);
-
+  await loadTranslations(LANG, true);
 
   initNavbar();
   initContactIdentity();
