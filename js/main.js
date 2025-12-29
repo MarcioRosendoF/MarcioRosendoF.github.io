@@ -97,6 +97,70 @@ const DeviceDetector = {
   },
 };
 
+const LayoutCache = {
+  _cache: new Map(),
+  _scheduled: false,
+
+  get(el) {
+    if (!el) return null;
+    let entry = this._cache.get(el);
+    if (!entry) {
+      entry = this.update(el);
+    }
+    return entry;
+  },
+
+  update(el) {
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const style = window.getComputedStyle(el);
+    const entry = {
+      left: rect.left,
+      top: rect.top,
+      right: rect.right,
+      bottom: rect.bottom,
+      width: rect.width,
+      height: rect.height,
+      offsetLeft: el.offsetLeft,
+      offsetTop: el.offsetTop,
+      offsetWidth: el.offsetWidth,
+      offsetHeight: el.offsetHeight,
+      paddingRight: style.paddingRight,
+      timestamp: performance.now(),
+    };
+    this._cache.set(el, entry);
+    return entry;
+  },
+
+  invalidate(el) {
+    if (el) {
+      this._cache.delete(el);
+    } else {
+      this._cache.clear();
+    }
+  },
+
+  refreshAll() {
+    for (const el of this._cache.keys()) {
+      this.update(el);
+    }
+  },
+
+  scheduleRefresh() {
+    if (this._scheduled) return;
+    this._scheduled = true;
+    requestAnimationFrame(() => {
+      this.refreshAll();
+      this._scheduled = false;
+    });
+  }
+};
+
+window.addEventListener("resize", () => LayoutCache.scheduleRefresh(), { passive: true });
+window.addEventListener("scroll", () => {
+  LayoutCache.scheduleRefresh();
+}, { passive: true });
+
 
 function getToastContainer() {
   let container = document.getElementById("toast-root");
@@ -374,10 +438,8 @@ function translatePage(isInitialLoad = false) {
     }
 
     requestAnimationFrame(() => {
-      if (typeof gsap !== "undefined" && gsap.globalTimeline) {
-        gsap.getTweensOf("*").forEach((tween) => {
-          if (tween.scrollTrigger) tween.scrollTrigger.refresh();
-        });
+      if (typeof ScrollTrigger !== "undefined") {
+        ScrollTrigger.refresh();
       }
     });
   }
@@ -665,28 +727,27 @@ class BaseHighlight {
     const min = options.min || 0.15;
     const max = options.max || baseDuration;
 
-    if (!this.lamp || !element || !this.lamp.getBoundingClientRect) {
+    if (!this.lamp || !element) {
       return baseDuration;
     }
 
-    const lampRect = this.lamp.dataset.cachedRect ? JSON.parse(this.lamp.dataset.cachedRect) : this.lamp.getBoundingClientRect();
-    const targetRect = element.getBoundingClientRect();
-    const containerRect = this.container ? (this.container.dataset.cachedRect ? JSON.parse(this.container.dataset.cachedRect) : this.container.getBoundingClientRect()) : null;
+    const lampData = LayoutCache.get(this.lamp);
+    const targetData = LayoutCache.get(element);
+    const containerData = this.container ? LayoutCache.get(this.container) : null;
 
     if (
-      !lampRect.width ||
-      !targetRect.width ||
-      !containerRect ||
-      !containerRect.width
+      !lampData ||
+      !targetData ||
+      !containerData
     ) {
       return baseDuration;
     }
-    const fullSpan = containerRect.width;
+    const fullSpan = containerData.width;
 
-    const leftCurrent = lampRect.left;
-    const rightCurrent = lampRect.right;
-    const leftTarget = targetRect.left;
-    const rightTarget = targetRect.right;
+    const leftCurrent = lampData.left;
+    const rightCurrent = lampData.right;
+    const leftTarget = targetData.left;
+    const rightTarget = targetData.right;
 
     const maxEdgeDistance = Math.max(
       Math.abs(leftTarget - leftCurrent),
@@ -711,9 +772,11 @@ class BaseHighlight {
   }
 
   _calculatePosition(element) {
+    const data = LayoutCache.get(element);
+    if (!data) return { left: 0, width: 0 };
     return {
-      left: element.offsetLeft,
-      width: element.offsetWidth,
+      left: data.offsetLeft,
+      width: data.offsetWidth,
     };
   }
 
@@ -849,7 +912,7 @@ class NavbarHighlight extends BaseHighlight {
       this.visibleSections.set(entry.target.id, {
         isIntersecting: entry.isIntersecting,
         ratio: entry.intersectionRatio,
-        rect: entry.boundingClientRect,
+        rect: entry.boundingClientRect, // IntersectionObserver rects are free (don't cause reflow)
       });
     });
 
@@ -1349,11 +1412,12 @@ function lockPageScroll() {
   body.style.overflow = "hidden";
 
   if (scrollbarWidth > 0) {
-    const existingPadding = parseFloat(
-      window.getComputedStyle(body).paddingRight || "0",
-    );
+    const data = LayoutCache.get(body);
+    const existingPadding = parseFloat(data ? data.paddingRight : "0") || 0;
     body.style.paddingRight = `${existingPadding + scrollbarWidth}px`;
   }
+
+  LayoutCache.invalidate();
 }
 
 function unlockPageScroll() {
@@ -1365,6 +1429,7 @@ function unlockPageScroll() {
   body.style.paddingRight = pageScrollLockState.bodyPaddingRight || "";
 
   pageScrollLockState = null;
+  LayoutCache.invalidate();
 }
 
 function clearModalSettleTimer() {
@@ -2172,55 +2237,24 @@ function initCursor() {
     }
   });
 
-  let cardRects = [];
-  let isDirty = true;
-
-  function updateRects() {
-    cardRects = Array.from(cards).map((card) => {
-      const rect = card.getBoundingClientRect();
-      return {
-        element: card,
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-      };
-    });
-    isDirty = false;
-  }
-
-  window.addEventListener(
-    "scroll",
-    () => {
-      isDirty = true;
-    },
-    { passive: true },
-  );
-  window.addEventListener(
-    "resize",
-    () => {
-      isDirty = true;
-    },
-    { passive: true },
-  );
-
   function updateCursor() {
     cursor.style.left = mouseX + "px";
     cursor.style.top = mouseY + "px";
 
-    if (isDirty) updateRects();
+    cards.forEach((card) => {
+      const data = LayoutCache.get(card);
+      if (!data) return;
 
-    cardRects.forEach((rect) => {
       if (
-        mouseX >= rect.left &&
-        mouseX <= rect.left + rect.width &&
-        mouseY >= rect.top &&
-        mouseY <= rect.top + rect.height
+        mouseX >= data.left &&
+        mouseX <= data.left + data.width &&
+        mouseY >= data.top &&
+        mouseY <= data.top + data.height
       ) {
-        const x = mouseX - rect.left;
-        const y = mouseY - rect.top;
-        rect.element.style.setProperty("--mouse-x", `${x}px`);
-        rect.element.style.setProperty("--mouse-y", `${y}px`);
+        const x = mouseX - data.left;
+        const y = mouseY - data.top;
+        card.style.setProperty("--mouse-x", `${x}px`);
+        card.style.setProperty("--mouse-y", `${y}px`);
       }
     });
 
@@ -2353,15 +2387,16 @@ function initInteractiveEffects() {
   const tiltCards = document.querySelectorAll(".spotlight-card");
   tiltCards.forEach((card) => {
     card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const data = LayoutCache.get(card);
+      if (!data) return;
 
+      const x = e.clientX - data.left;
+      const y = e.clientY - data.top;
 
       card.style.setProperty("--mouse-x", `${x}px`);
       card.style.setProperty("--mouse-y", `${y}px`);
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
+      const centerX = data.width / 2;
+      const centerY = data.height / 2;
       const rotateX = ((y - centerY) / centerY) * -5;
       const rotateY = ((x - centerX) / centerX) * 5;
 
@@ -2986,22 +3021,24 @@ class ScrollManager {
           e.preventDefault();
 
           const isTouchDevice = DeviceDetector.isTouchDevice;
-          const rect = target.getBoundingClientRect();
+          const data = LayoutCache.get(target);
+          if (!data) return;
+
           const viewportHeight =
             window.innerHeight || document.documentElement.clientHeight;
           const currentScrollY =
             window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
           const nav = document.querySelector("nav.tubelight-nav");
-          const navHeight = nav ? nav.offsetHeight : 0;
+          const navHeight = nav ? (LayoutCache.get(nav)?.offsetHeight || 0) : 0;
 
           let targetY;
 
-          if (rect.height < viewportHeight) {
-            const sectionCenterY = currentScrollY + rect.top + rect.height / 2;
+          if (data.height < viewportHeight) {
+            const sectionCenterY = currentScrollY + data.top + data.height / 2;
             targetY = sectionCenterY - viewportHeight / 2;
           } else {
             const marginTop = viewportHeight * 0.05;
-            targetY = currentScrollY + rect.top - navHeight - marginTop;
+            targetY = currentScrollY + data.top - navHeight - marginTop;
           }
 
           if (this.lenis && !isTouchDevice) {
