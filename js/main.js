@@ -430,6 +430,8 @@ function translatePage(isInitialLoad = false) {
       }
     });
 
+    LayoutCache.invalidate();
+
     if (window.renderProjects) window.renderProjects();
 
     const modal = document.getElementById("project-modal");
@@ -474,8 +476,8 @@ function translatePage(isInitialLoad = false) {
   if (isInitialLoad) {
     updateContent();
     updateLanguageToggle();
-    if (navbarHighlight) {
-      navbarHighlight._updateActiveSection();
+    if (navbarHighlight && navbarHighlight.container) {
+      navbarHighlight.updateHighlight();
     }
     animateHeroEntrance();
     return;
@@ -487,6 +489,12 @@ function translatePage(isInitialLoad = false) {
 
       if (languageHighlight) {
         languageHighlight.updateHighlight();
+      }
+      if (navbarHighlight) {
+        navbarHighlight.updateHighlight();
+      }
+      if (heroLanguageHighlight) {
+        heroLanguageHighlight.updateHighlight();
       }
     },
   });
@@ -636,6 +644,10 @@ function updateLanguageToggle() {
       heroLanguageHighlight.activeElement = activeBtn;
       heroLanguageHighlight.updateHighlight();
     }
+  }
+
+  if (navbarHighlight && navbarHighlight.container) {
+    navbarHighlight.updateHighlight();
   }
 }
 
