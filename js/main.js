@@ -2505,12 +2505,22 @@ function initPulseAnimations() {
 }
 
 
+const loadExternalScript = (src) => {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve(script);
+    script.onerror = () => reject(new Error(`Script load error for ${src}`));
+    document.head.appendChild(script);
+  });
+};
+
 async function loadScrollTrigger() {
-  if (typeof ScrollTrigger !== "undefined") return;
+  if (typeof window.ScrollTrigger !== "undefined") return;
   try {
-    await loadScript("./assets/vendor/ScrollTrigger.min.js");
-    if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
-      gsap.registerPlugin(ScrollTrigger);
+    await loadExternalScript("./assets/vendor/ScrollTrigger.min.js");
+    if (typeof gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined") {
+      gsap.registerPlugin(window.ScrollTrigger);
     }
   } catch (e) {
     console.warn("Failed to load ScrollTrigger", e);
@@ -2593,9 +2603,9 @@ function initTimelineAnimation() {
     }
 
     await loadScrollTrigger();
-    if (typeof ScrollTrigger === "undefined") return;
+    if (typeof window.ScrollTrigger === "undefined") return;
 
-    ScrollTrigger.matchMedia({
+    window.ScrollTrigger.matchMedia({
       "(min-width: 1024px)": function () {
         const desktopContainer = document.getElementById("timeline-desktop");
         if (!desktopContainer) return;
