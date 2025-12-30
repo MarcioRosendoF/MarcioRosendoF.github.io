@@ -440,7 +440,7 @@ function translatePage(isInitialLoad = false) {
     }
 
     requestAnimationFrame(() => {
-      if (typeof ScrollTrigger !== "undefined") {
+      if (typeof ScrollTrigger !== "undefined" && !DeviceDetector.isMobile) {
         ScrollTrigger.refresh();
       }
     });
@@ -2505,259 +2505,191 @@ function initPulseAnimations() {
 }
 
 
+async function loadScrollTrigger() {
+  if (typeof ScrollTrigger !== "undefined") return;
+  try {
+    await loadScript("./assets/vendor/ScrollTrigger.min.js");
+    if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+      gsap.registerPlugin(ScrollTrigger);
+    }
+  } catch (e) {
+    console.warn("Failed to load ScrollTrigger", e);
+  }
+}
+
+let nativeTimelineObserver = null;
+
 function initTimelineAnimation() {
   if (MotionPreferences.prefersReducedMotion) return;
   const timelineSection = document.getElementById("timeline");
   if (!timelineSection || typeof gsap === "undefined") return;
 
-  gsap.registerPlugin(ScrollTrigger);
+  const initMobile = () => {
+    const mobileContainer = document.getElementById("timeline-mobile");
+    if (!mobileContainer) return;
 
-  if (typeof window.__timelineAnimationHasPlayed === "undefined") {
-    window.__timelineAnimationHasPlayed = false;
-  }
+    // Immediate cleanup of any previous observers
+    if (nativeTimelineObserver) {
+      nativeTimelineObserver.disconnect();
+      nativeTimelineObserver = null;
+    }
 
-  ScrollTrigger.matchMedia({
+    if (window.__timelineAnimationHasPlayed) {
+      gsap.set("#timeline-mobile .timeline-dot", { opacity: 1, scale: 1, clearProps: "transform" });
+      gsap.set("#timeline-mobile .timeline-line", { scaleY: 1, opacity: 1, clearProps: "transform" });
+      gsap.set("#timeline-mobile .timeline-content", { opacity: 1, x: 0, clearProps: "all" });
+      gsap.set("#timeline-mobile .timeline-tags", { opacity: 1, x: 0, clearProps: "all" });
+      return;
+    }
 
-    "(min-width: 1024px)": function () {
-      const desktopContainer = document.getElementById("timeline-desktop");
-      if (!desktopContainer) return;
+    gsap.set("#timeline-mobile .timeline-dot", { opacity: 0, scale: 0 });
+    gsap.set("#timeline-mobile .timeline-line", { scaleY: 0, opacity: 0, transformOrigin: "top center" });
+    gsap.set("#timeline-mobile .timeline-content", { opacity: 0, x: -20 });
+    gsap.set("#timeline-mobile .timeline-tags", { opacity: 0, x: 20 });
 
-      const dots = Array.from(
-        desktopContainer.querySelectorAll(".timeline-dot"),
-      );
-      const lines = Array.from(
-        desktopContainer.querySelectorAll(".timeline-line"),
-      );
+    nativeTimelineObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !window.__timelineAnimationHasPlayed) {
+          const dots = Array.from(mobileContainer.querySelectorAll(".timeline-dot"));
+          const lines = Array.from(mobileContainer.querySelectorAll(".timeline-line"));
+          const contentGroups = Array.from(mobileContainer.querySelectorAll(".timeline-content"));
+          const tagContainers = Array.from(mobileContainer.querySelectorAll(".timeline-tags"));
 
+          const tl = gsap.timeline({
+            onComplete: () => {
+              window.__timelineAnimationHasPlayed = true;
+              if (nativeTimelineObserver) {
+                nativeTimelineObserver.disconnect();
+                nativeTimelineObserver = null;
+              }
+            },
+          });
 
-      const contentGroups = Array.from(
-        desktopContainer.querySelectorAll(".group"),
-      );
+          dots.forEach((dot, index) => {
+            const line = lines[index];
+            const content = contentGroups[index];
+            const tags = tagContainers[index];
+            const startTime = index === 0 ? 0 : ">-0.1";
 
-      const tagContainers = Array.from(
-        desktopContainer.querySelectorAll(
-          ".col-start-2 .flex, .col-start-3 .flex",
-        ),
-      ).filter((el) => !el.closest(".group"));
-      const tagGroups = Array.from(
-        desktopContainer.querySelectorAll(
-          ".col-start-1 .flex, .col-start-2 .flex, .col-start-3 .flex",
-        ),
-      ).filter((el) => {
-        return !el.closest(".group");
+            tl.to(dot, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)", clearProps: "transform" }, startTime);
+            if (content) tl.to(content, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, "<+=0.1");
+            if (tags) tl.to(tags, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, "<+=0.1");
+            if (line) tl.to(line, { scaleY: 1, opacity: 1, duration: 0.3, ease: "none" }, ">");
+          });
+        }
       });
+    }, {
+      threshold: 0.05,
+      rootMargin: "0px 0px -50px 0px"
+    });
 
-      if (window.__timelineAnimationHasPlayed) {
-        gsap.set(dots, {
-          opacity: 1,
-          scale: 1,
-          clearProps: "transform",
+    nativeTimelineObserver.observe(mobileContainer);
+  };
+
+  const initDesktop = async () => {
+    if (nativeTimelineObserver) {
+      nativeTimelineObserver.disconnect();
+      nativeTimelineObserver = null;
+    }
+
+    await loadScrollTrigger();
+    if (typeof ScrollTrigger === "undefined") return;
+
+    ScrollTrigger.matchMedia({
+      "(min-width: 1024px)": function () {
+        const desktopContainer = document.getElementById("timeline-desktop");
+        if (!desktopContainer) return;
+
+        const dots = Array.from(desktopContainer.querySelectorAll(".timeline-dot"));
+        const lines = Array.from(desktopContainer.querySelectorAll(".timeline-line"));
+        const contentGroups = Array.from(desktopContainer.querySelectorAll(".group"));
+
+        const tagGroups = Array.from(
+          desktopContainer.querySelectorAll(
+            ".col-start-1 .flex, .col-start-2 .flex, .col-start-3 .flex",
+          ),
+        ).filter((el) => {
+          return !el.closest(".group");
         });
-        gsap.set(lines, {
-          scaleY: 1,
-          opacity: 1,
-          clearProps: "transform",
-        });
-        gsap.set(contentGroups, {
-          opacity: 1,
-          x: 0,
-          clearProps: "all",
-        });
-        gsap.set(tagGroups, {
-          opacity: 1,
-          x: 0,
-          clearProps: "all",
-        });
-        return;
-      }
 
-      gsap.set(dots, { opacity: 0, scale: 0 });
-      gsap.set(lines, { scaleY: 0, opacity: 0, transformOrigin: "top center" });
-      gsap.set(contentGroups, { opacity: 0, x: -20 });
-      gsap.set(tagGroups, { opacity: 0, x: 20 });
+        if (window.__timelineAnimationHasPlayed) {
+          gsap.set(dots, { opacity: 1, scale: 1, clearProps: "transform" });
+          gsap.set(lines, { scaleY: 1, opacity: 1, clearProps: "transform" });
+          gsap.set(contentGroups, { opacity: 1, x: 0, clearProps: "all" });
+          gsap.set(tagGroups, { opacity: 1, x: 0, clearProps: "all" });
+          return;
+        }
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: desktopContainer,
-          start: "top 75%",
-          toggleActions: "play none none none",
-          once: true,
-        },
-        onComplete: () => {
-          window.__timelineAnimationHasPlayed = true;
-        },
-      });
+        gsap.set(dots, { opacity: 0, scale: 0 });
+        gsap.set(lines, { scaleY: 0, opacity: 0, transformOrigin: "top center" });
+        gsap.set(contentGroups, { opacity: 0, x: -20 });
+        gsap.set(tagGroups, { opacity: 0, x: 20 });
 
-      dots.forEach((dot, index) => {
-        const line = lines[index];
-        const content = contentGroups[index];
-        const tags = tagGroups[index];
-        const startTime = index === 0 ? 0 : ">-0.1";
-
-        tl.to(
-          dot,
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.4,
-            ease: "back.out(2)",
-            clearProps: "transform",
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: desktopContainer,
+            start: "top 75%",
+            toggleActions: "play none none none",
+            once: true,
           },
-          startTime,
-        );
-        if (content) {
-          tl.to(
-            content,
-            { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
-            "<+=0.1",
-          );
-        }
-        if (tags) {
-          tl.to(
-            tags,
-            { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
-            "<+=0.1",
-          );
-        }
-        if (line) {
-          tl.to(
-            line,
-            { scaleY: 1, opacity: 1, duration: 0.3, ease: "none" },
-            ">",
-          );
-        }
-      });
-
-
-      const clearActive = () => {
-        dots.forEach((dot) => dot.classList.remove("is-active"));
-      };
-
-      const setActiveIndex = (index) => {
-        clearActive();
-        if (index < 0) return;
-        const dot = dots[index];
-        if (dot) dot.classList.add("is-active");
-      };
-
-      const bindHover = (el, index) => {
-        if (!el || el.dataset.timelineHoverBound) return;
-        el.dataset.timelineHoverBound = "true";
-        el.addEventListener("mouseenter", () => setActiveIndex(index));
-        el.addEventListener("mouseleave", () => setActiveIndex(-1));
-      };
-
-      contentGroups.forEach((el, index) => bindHover(el, index));
-      tagGroups.forEach((el, index) => bindHover(el, index));
-    },
-
-
-    "(max-width: 1023px)": function () {
-      const mobileContainer = document.getElementById("timeline-mobile");
-      if (!mobileContainer) return;
-
-      const dots = Array.from(
-        mobileContainer.querySelectorAll(".timeline-dot"),
-      );
-      const lines = Array.from(
-        mobileContainer.querySelectorAll(".timeline-line"),
-      );
-      const contentGroups = Array.from(
-        mobileContainer.querySelectorAll(".timeline-content"),
-      );
-      const tagContainers = Array.from(
-        mobileContainer.querySelectorAll(".timeline-tags"),
-      );
-
-      if (window.__timelineAnimationHasPlayed) {
-        gsap.set(dots, {
-          opacity: 1,
-          scale: 1,
-          clearProps: "transform",
+          onComplete: () => {
+            window.__timelineAnimationHasPlayed = true;
+          },
         });
-        gsap.set(lines, {
-          scaleY: 1,
-          opacity: 1,
-          clearProps: "transform",
-        });
-        gsap.set(contentGroups, {
-          opacity: 1,
-          x: 0,
-          clearProps: "all",
-        });
-        gsap.set(tagContainers, {
-          opacity: 1,
-          x: 0,
-          clearProps: "all",
-        });
-        return;
-      }
 
-      gsap.set(dots, { opacity: 0, scale: 0 });
-      gsap.set(lines, { scaleY: 0, opacity: 0, transformOrigin: "top center" });
-      gsap.set(contentGroups, { opacity: 0, x: -20 });
-      gsap.set(tagContainers, { opacity: 0, x: 20 });
+        dots.forEach((dot, index) => {
+          const line = lines[index];
+          const content = contentGroups[index];
+          const tags = tagGroups[index];
+          const startTime = index === 0 ? 0 : ">-0.1";
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !window.__timelineAnimationHasPlayed) {
-            const tl = gsap.timeline({
-              onComplete: () => {
-                window.__timelineAnimationHasPlayed = true;
-                observer.disconnect();
-              },
-            });
-
-            dots.forEach((dot, index) => {
-              const line = lines[index];
-              const content = contentGroups[index];
-              const tags = tagContainers[index];
-              const startTime = index === 0 ? 0 : ">-0.1";
-
-              tl.to(
-                dot,
-                {
-                  opacity: 1,
-                  scale: 1,
-                  duration: 0.4,
-                  ease: "back.out(2)",
-                  clearProps: "transform",
-                },
-                startTime,
-              );
-
-              if (content) {
-                tl.to(
-                  content,
-                  { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
-                  "<+=0.1",
-                );
-              }
-              if (tags) {
-                tl.to(
-                  tags,
-                  { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" },
-                  "<+=0.1",
-                );
-              }
-              if (line) {
-                tl.to(
-                  line,
-                  { scaleY: 1, opacity: 1, duration: 0.3, ease: "none" },
-                  ">",
-                );
-              }
-            });
+          tl.to(dot, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)", clearProps: "transform" }, startTime);
+          if (content) {
+            tl.to(content, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, "<+=0.1");
+          }
+          if (tags) {
+            tl.to(tags, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, "<+=0.1");
+          }
+          if (line) {
+            tl.to(line, { scaleY: 1, opacity: 1, duration: 0.3, ease: "none" }, ">");
           }
         });
-      }, {
-        threshold: 0.05,
-        rootMargin: "0px 0px -50px 0px"
-      });
 
-      observer.observe(mobileContainer);
-    },
-  });
+        const clearActive = () => {
+          dots.forEach((dot) => dot.classList.remove("is-active"));
+        };
+        const setActiveIndex = (index) => {
+          clearActive();
+          if (index < 0) return;
+          const dot = dots[index];
+          if (dot) dot.classList.add("is-active");
+        };
+        const bindHover = (el, index) => {
+          if (!el || el.dataset.timelineHoverBound) return;
+          el.dataset.timelineHoverBound = "true";
+          el.addEventListener("mouseenter", () => setActiveIndex(index));
+          el.addEventListener("mouseleave", () => setActiveIndex(-1));
+        };
+
+        contentGroups.forEach((el, index) => bindHover(el, index));
+        tagGroups.forEach((el, index) => bindHover(el, index));
+      },
+    });
+  };
+
+  const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+  if (isDesktop) {
+    initDesktop();
+  } else {
+    initMobile();
+    const onResize = () => {
+      if (window.matchMedia("(min-width: 1024px)").matches) {
+        window.removeEventListener("resize", onResize);
+        initDesktop();
+      }
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+  }
 }
 
 let marqueeTimeline = null;
