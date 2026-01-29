@@ -187,7 +187,7 @@ public class CoopConfirmationGate : MonoBehaviourPun
       },
       {
         type: "image",
-        src: "Images/ImagensProjetos/EchoesOfSuffering/_n2D_r.webp",
+        src: "Images/ImagensProjetos/EchoesOfSuffering/n2D_r.webp",
       },
       {
         type: "image",
