@@ -385,13 +385,13 @@ function translatePage(isInitialLoad = false) {
 
   let orderedTargets = [
     ...heroChildren,
+    projectsDivider,
+    ...projectsContent,
     aboutDivider,
     ...aboutContent,
     marqueeSection,
     timelineDivider,
     ...timelineContent,
-    projectsDivider,
-    ...projectsContent,
     contactDivider,
     ...contactContent,
     footerAnalyticsNotice,
@@ -442,6 +442,9 @@ function translatePage(isInitialLoad = false) {
     requestAnimationFrame(() => {
       if (typeof ScrollTrigger !== "undefined" && !DeviceDetector.isMobile) {
         ScrollTrigger.refresh();
+      }
+      if (typeof lucide !== "undefined") {
+        lucide.createIcons();
       }
     });
   }
