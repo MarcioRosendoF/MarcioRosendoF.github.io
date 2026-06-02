@@ -70,7 +70,7 @@ body.fonts-loaded {}
 }
 
 #lang-lamp,
-#lang-lamp-hero {
+#lang-lamp-footer {
     position: absolute;
     top: 4px;
     bottom: 4px;
@@ -82,7 +82,7 @@ body.fonts-loaded {}
 }
 
 #lang-lamp::after,
-#lang-lamp-hero::after {
+#lang-lamp-footer::after {
     content: "";
     position: absolute;
     bottom: -1px;
@@ -98,7 +98,7 @@ body.fonts-loaded {}
 }
 
 #lang-hover-outline,
-#lang-hover-outline-hero {
+#lang-hover-outline-footer {
     position: absolute;
     top: 4px;
     bottom: 4px;
@@ -1364,13 +1364,13 @@ a.js-smooth-scroll::after {
 
 @media (max-width: 820px),
 (max-height: 540px) {
-    #language-toggle-hero {
+    #language-toggle-footer {
         display: flex !important;
     }
 }
 
 @media (min-width: 821px) and (min-height: 541px) {
-    #language-toggle-hero {
+    #language-toggle-footer {
         display: none !important;
     }
 }

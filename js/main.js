@@ -18,7 +18,13 @@ window.addEventListener("focus", () => {
 
 let lenis;
 let TRANSLATIONS = {};
-let LANG = (localStorage.getItem("lang") || "en").toLowerCase();
+let LANG = localStorage.getItem("lang");
+if (!LANG) {
+  const browserLang = (navigator.language || navigator.userLanguage || "en").toLowerCase();
+  LANG = browserLang.startsWith("pt") ? "pt-br" : "en";
+} else {
+  LANG = LANG.toLowerCase();
+}
 let toastTimeoutId = null;
 const MotionPreferences = {
   get prefersReducedMotion() {
@@ -496,8 +502,8 @@ function translatePage(isInitialLoad = false) {
       if (navbarHighlight) {
         navbarHighlight.updateHighlight();
       }
-      if (heroLanguageHighlight) {
-        heroLanguageHighlight.updateHighlight();
+      if (footerLanguageHighlight) {
+        footerLanguageHighlight.updateHighlight();
       }
     },
   });
@@ -611,10 +617,10 @@ function setLanguage(lang) {
     languageHighlight.setActive(activeDesktopBtn);
   }
 
-  const heroToggle = document.getElementById("language-toggle-hero");
-  const activeHeroBtn = heroToggle?.querySelector(`[data-lang="${targetLang}"]`);
-  if (activeHeroBtn && heroLanguageHighlight) {
-    heroLanguageHighlight.setActive(activeHeroBtn);
+  const footerToggle = document.getElementById("language-toggle-footer");
+  const activeFooterBtn = footerToggle?.querySelector(`[data-lang="${targetLang}"]`);
+  if (activeFooterBtn && footerLanguageHighlight) {
+    footerLanguageHighlight.setActive(activeFooterBtn);
   }
 }
 
@@ -640,12 +646,12 @@ function updateLanguageToggle() {
     .querySelectorAll('[data-language-toggle="tubelight"]')
     .forEach((toggle) => toggle.setAttribute("data-active-lang", LANG));
 
-  if (heroLanguageHighlight) {
-    const heroToggle = document.getElementById("language-toggle-hero");
-    const activeBtn = heroToggle?.querySelector(`[data-lang="${LANG}"]`);
+  if (footerLanguageHighlight) {
+    const footerToggle = document.getElementById("language-toggle-footer");
+    const activeBtn = footerToggle?.querySelector(`[data-lang="${LANG}"]`);
     if (activeBtn) {
-      heroLanguageHighlight.activeElement = activeBtn;
-      heroLanguageHighlight.updateHighlight();
+      footerLanguageHighlight.activeElement = activeBtn;
+      footerLanguageHighlight.updateHighlight();
     }
   }
 
@@ -1044,7 +1050,7 @@ const navbarHighlight = new NavbarHighlight();
 function initNavbar() {
   navbarHighlight.init();
   languageHighlight.init();
-  heroLanguageHighlight.init();
+  footerLanguageHighlight.init();
 }
 
 class LanguageHighlight extends BaseHighlight {
@@ -1145,10 +1151,10 @@ class LanguageHighlight extends BaseHighlight {
 }
 
 const languageHighlight = new LanguageHighlight();
-const heroLanguageHighlight = new LanguageHighlight({
-  containerId: "language-toggle-hero",
-  lampId: "lang-lamp-hero",
-  hoverOutlineId: "lang-hover-outline-hero",
+const footerLanguageHighlight = new LanguageHighlight({
+  containerId: "language-toggle-footer",
+  lampId: "lang-lamp-footer",
+  hoverOutlineId: "lang-hover-outline-footer",
 });
 
 const initThreeJS = async () => {
@@ -3350,7 +3356,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const navLamp = document.getElementById("nav-lamp");
     const langLamp = document.getElementById("lang-lamp");
-    const heroLangLamp = document.getElementById("lang-lamp-hero");
+    const footerLangLamp = document.getElementById("lang-lamp-footer");
 
     if (typeof gsap !== "undefined") {
       if (navLamp) {
@@ -3359,8 +3365,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (langLamp) {
         gsap.to(langLamp, { opacity: 0, duration: 0.15, overwrite: true });
       }
-      if (heroLangLamp) {
-        gsap.to(heroLangLamp, { opacity: 0, duration: 0.15, overwrite: true });
+      if (footerLangLamp) {
+        gsap.to(footerLangLamp, { opacity: 0, duration: 0.15, overwrite: true });
       }
     }
 
@@ -3376,8 +3382,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (languageHighlight) {
         languageHighlight.updateHighlight();
       }
-      if (heroLanguageHighlight) {
-        heroLanguageHighlight.updateHighlight();
+      if (footerLanguageHighlight) {
+        footerLanguageHighlight.updateHighlight();
       }
 
       if (typeof gsap !== "undefined") {
@@ -3395,8 +3401,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             ease: "power2.out",
           });
         }
-        if (heroLangLamp) {
-          gsap.to(heroLangLamp, {
+        if (footerLangLamp) {
+          gsap.to(footerLangLamp, {
             opacity: 1,
             duration: 0.2,
             ease: "power2.out",

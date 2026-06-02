@@ -498,70 +498,43 @@
     </div>
 
     <main id="main-content" class="px-6 md:px-12 pb-6 md:pb-10 pt-8 md:pt-28 max-w-[1600px] mx-auto">
-        <section id="hero" class="relative flex flex-col justify-start pb-20 md:pb-32 xl:pb-28 xl:justify-center">
-            <div class="flex justify-center pb-6">
-                <div id="language-toggle-hero" data-language-toggle="tubelight"
-                    class="language-toggle-tubelight tubelight-nav flex items-center justify-center rounded-full"
-                    data-active-lang="en" role="group" aria-label="Language Switcher">
-                    <div id="lang-lamp-hero" aria-hidden="true"></div>
-                    <div id="lang-hover-outline-hero" aria-hidden="true"></div>
-                    <button data-lang="en" aria-label="Switch to English" aria-pressed="false"
-                        class="lang-btn js-lang-btn text-[10px] font-mono uppercase tracking-widest text-white">
-                        EN
-                    </button>
-                    <button data-lang="pt-br" aria-label="Mudar para Português" aria-pressed="false"
-                        class="lang-btn js-lang-btn text-[10px] font-mono uppercase tracking-widest text-white">
-                        PT
-                    </button>
-                </div>
-            </div>
-            <div class="font-mono text-muted text-xs md:text-sm mb-4 ml-1 flex items-center gap-2">
+        <section id="hero" class="relative flex flex-col justify-between items-center min-h-[75dvh] md:min-h-[85dvh] pt-6 pb-12 md:pt-8 md:pb-16 text-center">
+            <div class="mb-auto font-mono text-muted text-xs md:text-sm flex items-center justify-center gap-2 tracking-widest">
                 <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 <span data-translate="hero_status">SYSTEM ONLINE</span>
             </div>
 
-            <div class="hero-inner flex flex-col gap-10 xl:flex-row xl:items-end xl:justify-between">
-                <div class="relative flex flex-col gap-6 md:mt-4">
-                    <div class="text-center xl:text-left">
-                        <h1 class="leading-[1] md:leading-[0.95] font-bold tracking-tighter select-none break-words">
-                            <span
-                                class="block text-[clamp(3.2rem,8vw,6.5rem)] xl:text-[clamp(3.25rem,9vw,9.5rem)] text-white drop-shadow-2xl"
-                                data-translate="hero_title_1">
-                                MÁRCIO
-                            </span>
-                            <span
-                                class="block text-[clamp(3.2rem,8vw,6.5rem)] xl:text-[clamp(3.25rem,9vw,9.5rem)] hero-title-ghost mt-1"
-                                data-translate="hero_title_2">
-                                ROSENDO
-                            </span>
-                        </h1>
-                    </div>
+            <div class="max-w-5xl mx-auto my-auto flex flex-col items-center gap-8 py-8">
+                <h1 class="leading-[0.9] font-bold tracking-tighter select-none uppercase">
+                    <span class="block text-[clamp(3.5rem,10vw,8rem)] text-white drop-shadow-2xl" data-translate="hero_title_1">
+                        MÁRCIO
+                    </span>
+                    <span class="block text-[clamp(3.5rem,10vw,8rem)] hero-title-ghost mt-2" data-translate="hero_title_2">
+                        ROSENDO
+                    </span>
+                </h1>
 
+                <p class="max-w-2xl text-muted text-[clamp(1.1rem,2vw,1.4rem)] leading-relaxed font-mono" data-translate="hero_description">
+                    Game Programmer focused on building responsive game systems and refined player interactions using C# and Unity.
+                </p>
+
+                <div class="flex flex-wrap gap-4 justify-center mt-4">
+                    <a href="./MarcioRosendoResumeEn.pdf" download="MarcioRosendoResumeEn.pdf" id="hero-cv-btn" class="btn-eclipse-reverse group inline-flex items-center gap-2 px-8 py-4 font-bold rounded-full hover:scale-105 transition-all text-sm md:text-base hover-trigger">
+                        <i data-lucide="download" class="w-4 h-4 relative z-10"></i>
+                        <span class="relative z-10" data-translate="hero_cta_cv">Download CV</span>
+                    </a>
+                    <a href="#projects" class="js-smooth-scroll px-8 py-4 bg-transparent border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition-colors text-sm md:text-base" data-translate="hero_cta_primary">
+                        View Work
+                    </a>
+                    <a href="#contact" class="js-smooth-scroll px-8 py-4 bg-transparent border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition-colors text-sm md:text-base" data-translate="hero_cta_secondary">
+                        Contact
+                    </a>
                 </div>
+            </div>
 
-                <div class="hero-cta-block flex flex-col items-center xl:items-end gap-6">
-                    <p class="max-w-3xl xl:max-w-md text-muted text-[clamp(1.05rem,2.2vw,1.5rem)] xl:text-lg leading-relaxed font-mono text-center xl:text-right"
-                        data-translate="hero_description">
-                        Game Programmer focused on building responsive game systems and refined player interactions
-                        using
-                        <span class=\"text-white font-bold\">C#</span> and <span class=\"text-white
-                            font-bold\">Unity</span>.
-                    </p>
-                    <div class="hero-cta-group flex flex-wrap gap-3 md:gap-4 justify-center xl:justify-end">
-                        <a href="./MarcioRosendoResumeEn.pdf" download="MarcioRosendoResumeEn.pdf" id="hero-cv-btn"
-                            class="btn-eclipse-reverse group inline-flex items-center gap-2 px-6 py-3 font-bold rounded-full hover:scale-105 transition-all text-sm md:text-base hover-trigger">
-                            <i data-lucide="download" class="w-4 h-4 relative z-10"></i>
-                            <span class="relative z-10" data-translate="hero_cta_cv">Download CV</span>
-                        </a>
-                        <a href="#projects"
-                            class="js-smooth-scroll px-6 py-3 bg-transparent border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition-colors text-sm md:text-base"
-                            data-translate="hero_cta_primary">View Work</a>
-                        <a href="#contact"
-                            class="js-smooth-scroll px-6 py-3 bg-transparent border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition-colors text-sm md:text-base"
-                            data-translate="hero_cta_secondary">Contact</a>
-                    </div>
-
-                </div>
+            <div class="mt-auto flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                <span class="font-mono text-[10px] uppercase tracking-widest text-muted">Scroll</span>
+                <i data-lucide="arrow-down" class="w-4 h-4 animate-bounce"></i>
             </div>
         </section>
 
@@ -1304,7 +1277,19 @@
         </section>
     </main>
 
-    <footer class="py-10 px-6 text-center">
+    <footer class="py-10 px-6 text-center flex flex-col items-center gap-4">
+        <div class="md:hidden">
+            <div id="language-toggle-footer" data-language-toggle="tubelight" class="language-toggle-tubelight tubelight-nav flex items-center justify-center rounded-full" data-active-lang="en" role="group" aria-label="Language Switcher">
+                <div id="lang-lamp-footer" aria-hidden="true"></div>
+                <div id="lang-hover-outline-footer" aria-hidden="true"></div>
+                <button data-lang="en" aria-label="Switch to English" class="lang-btn js-lang-btn text-[10px] font-mono uppercase tracking-widest text-white">
+                    EN
+                </button>
+                <button data-lang="pt-br" aria-label="Mudar para Português" class="lang-btn js-lang-btn text-[10px] font-mono uppercase tracking-widest text-white">
+                    PT
+                </button>
+            </div>
+        </div>
         <p class="text-xs text-muted/70 font-mono">
             <span data-translate="footer_analytics_notice_1">This site uses</span>
             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer"
