@@ -62,21 +62,15 @@ export class ScrollManager {
   }
 
   pauseForModal() {
-    if (this.lenis && typeof this.lenis.destroy === "function") {
-      this.lenis.destroy();
+    if (this.lenis) {
+      this.lenis.stop();
     }
-    this.lenis = null;
-
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-
-    window.lenis = null;
   }
 
   resumeAfterModal() {
-    this._initLenis();
+    if (this.lenis) {
+      this.lenis.start();
+    }
   }
 
   _setupAnchorLinks() {
@@ -102,13 +96,10 @@ export class ScrollManager {
           const navHeight = nav ? (LayoutCache.get(nav)?.offsetHeight || 0) : 0;
 
           let targetY;
-
-          if (data.height < viewportHeight) {
-            const sectionCenterY = currentScrollY + data.top + data.height / 2;
-            targetY = sectionCenterY - viewportHeight / 2;
+          if (href === "#hero") {
+            targetY = 0;
           } else {
-            const marginTop = viewportHeight * 0.05;
-            targetY = currentScrollY + data.top - navHeight - marginTop;
+            targetY = Math.max(0, data.top - navHeight - 20);
           }
 
           if (this.lenis && !isTouchDevice) {

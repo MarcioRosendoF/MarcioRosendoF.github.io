@@ -1,72 +1,8 @@
 import { trackEvent } from "./device-detector.js";
 import { getTranslations } from "./i18n.js";
+import { showToast, copyEmailToClipboard } from "./toast.js";
 
-let toastTimeoutId = null;
 
-export function getToastContainer() {
-  let container = document.getElementById("toast-root");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "toast-root";
-    container.className =
-      "fixed bottom-6 right-4 md:right-6 z-[11000] flex flex-col items-end gap-3 pointer-events-none";
-    document.body.appendChild(container);
-  }
-  return container;
-}
-
-export function showToast(messageKeyOrText, type = "info") {
-  const container = getToastContainer();
-  if (!container) return;
-
-  const TRANSLATIONS = getTranslations();
-  const message = (TRANSLATIONS && TRANSLATIONS[messageKeyOrText]) || messageKeyOrText;
-
-  let toast = container.querySelector(".js-toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.className =
-      "js-toast pointer-events-auto rounded-full border bg-zinc-900/90 backdrop-blur px-4 py-2.5 text-xs md:text-sm shadow-[0_20px_45px_rgba(0,0,0,0.45)] flex items-center gap-2 translate-y-4 opacity-0 transition-all duration-200 border-white/15 text-muted";
-    toast.setAttribute("role", "status");
-    toast.setAttribute("aria-live", "polite");
-
-    const dot = document.createElement("span");
-    dot.className = "js-toast-dot inline-block h-1.5 w-1.5 rounded-full bg-zinc-400";
-
-    const textEl = document.createElement("span");
-    textEl.className = "js-toast-text font-mono tracking-tight";
-
-    toast.appendChild(dot);
-    toast.appendChild(textEl);
-    container.appendChild(toast);
-  }
-
-  const textEl = toast.querySelector(".js-toast-text");
-  const dotEl = toast.querySelector(".js-toast-dot");
-  if (textEl) {
-    textEl.textContent = message;
-  }
-
-  toast.className =
-    "js-toast pointer-events-auto rounded-full border bg-zinc-900/90 backdrop-blur px-4 py-2.5 text-xs md:text-sm shadow-[0_20px_45px_rgba(0,0,0,0.45)] flex items-center gap-2 translate-y-4 opacity-0 transition-all duration-200 border-white/15 text-muted";
-
-  if (dotEl) {
-    dotEl.className = "js-toast-dot inline-block h-1.5 w-1.5 rounded-full bg-zinc-400";
-  }
-
-  requestAnimationFrame(() => {
-    toast.classList.remove("translate-y-4", "opacity-0");
-    toast.classList.add("translate-y-0", "opacity-100");
-  });
-
-  if (toastTimeoutId) {
-    clearTimeout(toastTimeoutId);
-  }
-  toastTimeoutId = setTimeout(() => {
-    toast.classList.remove("translate-y-0", "opacity-100");
-    toast.classList.add("translate-y-4", "opacity-0");
-  }, 2800);
-}
 
 export function getContactEmail() {
   return "contact@marciorosendo.com";
@@ -101,35 +37,13 @@ export function initContactIdentity() {
       }
     });
   }
+
+  document.addEventListener("click", (e) => {
+    const target = e.target.closest("[data-action='reset-contact-form']");
+    if (target) resetContactForm();
+  });
 }
 
-export async function copyEmailToClipboard() {
-  const email = getContactEmail();
-  const btn = document.getElementById("copy-email-btn");
-  const originalBtnClasses = btn ? btn.className : "";
-  const copyIcon = btn ? btn.querySelector(".copy-icon") : null;
-  const checkIcon = btn ? btn.querySelector(".copy-check-icon") : null;
-
-  try {
-    await navigator.clipboard.writeText(email);
-
-    showToast("toast_email_copied", "success");
-    if (btn) {
-      if (copyIcon) copyIcon.classList.add("hidden");
-      if (checkIcon) checkIcon.classList.remove("hidden");
-      setTimeout(() => {
-        if (btn) {
-          btn.className = originalBtnClasses;
-        }
-        if (copyIcon) copyIcon.classList.remove("hidden");
-        if (checkIcon) checkIcon.classList.add("hidden");
-      }, 1200);
-    }
-  } catch (err) {
-    console.error("Failed to copy:", err);
-    showToast("toast_email_error", "error");
-  }
-}
 
 export function initCVDownload() {
   const buttons = [];
@@ -202,6 +116,9 @@ async function handleContactSubmit(e) {
 
   if (!btnText) return;
 
+  const formElements = form.querySelectorAll("input, textarea");
+  formElements.forEach(el => el.disabled = true);
+
   btn.disabled = true;
   btn.classList.add("cursor-not-allowed", "opacity-80", "is-sending");
   btnText.setAttribute("data-translate", "contact_btn_sending");
@@ -250,6 +167,7 @@ async function handleContactSubmit(e) {
       });
 
       form.reset();
+      formElements.forEach(el => el.disabled = false);
 
       btn.classList.remove("is-sending");
       btn.classList.add("is-success");
@@ -295,7 +213,7 @@ async function handleContactSubmit(e) {
       event_label: "contact_form",
       status: "error",
     });
-    alert("Connection Error. Please try again or email directly.");
+    showToast("toast_contact_error", "error");
     btn.disabled = false;
     btn.classList.remove("cursor-not-allowed", "opacity-80", "is-sending", "is-success");
     btnText.setAttribute("data-translate", "contact_btn_send");
@@ -305,6 +223,7 @@ async function handleContactSubmit(e) {
     } else {
       btnText.textContent = "Send Message";
     }
+    formElements.forEach(el => el.disabled = false);
   }
 }
 
@@ -360,5 +279,3 @@ export function initContactAnalytics() {
   });
 }
 
-window.copyEmailToClipboard = copyEmailToClipboard;
-window.resetContactForm = resetContactForm;

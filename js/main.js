@@ -24,11 +24,12 @@ import {
   initScrollAnimations,
   initTimelineAnimation,
   initPulseAnimations,
-  initMarquee,
   initInteractiveEffects,
 } from "./modules/effects.js";
+import { initMarquee } from "./modules/marquee.js";
 import { ScrollManager } from "./modules/scroll-manager.js";
 import { initProjectCardsAccessibility } from "./modules/projects.js";
+import { initTimeline } from "./modules/timeline.js";
 
 if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
@@ -57,6 +58,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadTranslations(getLanguage(), true);
 
   initNavbar();
+  initTimeline();
   initContactIdentity();
 
   if (MotionPreferences.prefersReducedMotion) {
@@ -86,13 +88,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   });
 
+  const navLamp = document.getElementById("nav-lamp");
+  const langLamp = document.getElementById("lang-lamp");
+  const footerLangLamp = document.getElementById("lang-lamp-footer");
+  const nav = document.querySelector("nav.tubelight-nav");
+
   let resizeTimeout;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimeout);
-
-    const navLamp = document.getElementById("nav-lamp");
-    const langLamp = document.getElementById("lang-lamp");
-    const footerLangLamp = document.getElementById("lang-lamp-footer");
 
     if (typeof gsap !== "undefined") {
       if (navLamp) {
@@ -107,7 +110,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     resizeTimeout = setTimeout(() => {
-      const nav = document.querySelector("nav.tubelight-nav");
       if (nav) {
         nav.scrollLeft = 0;
       }
@@ -146,7 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     }, 200);
-  });
+  }, { passive: true });
 });
 
 window.addEventListener("load", () => {

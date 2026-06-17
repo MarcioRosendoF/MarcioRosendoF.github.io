@@ -1,4 +1,6 @@
 import { DeviceDetector } from "./device-detector.js";
+import { projectsData } from "../projects-data.js";
+import { getCurrentProjectIndex } from "./projects.js";
 
 export let currentMediaIndex = 0;
 
@@ -69,8 +71,7 @@ export function updateMediaDots() {
 }
 
 export function navigateMedia(direction) {
-  const projectsData = window.projectsData;
-  const currentProjectIndex = window.currentProjectIndex || 0;
+  const currentProjectIndex = getCurrentProjectIndex();
   const p = projectsData[currentProjectIndex];
   currentMediaIndex = (currentMediaIndex + direction + p.media.length) % p.media.length;
 
@@ -88,8 +89,7 @@ export function navigateMedia(direction) {
 
 export function goToMedia(index) {
   currentMediaIndex = index;
-  const projectsData = window.projectsData;
-  const currentProjectIndex = window.currentProjectIndex || 0;
+  const currentProjectIndex = getCurrentProjectIndex();
   const p = projectsData[currentProjectIndex];
   const mediaInner = document.querySelector("#media-container .media-inner");
   if (mediaInner) {
@@ -134,5 +134,3 @@ export function initMediaSwipe() {
   }
 }
 
-window.navigateMedia = navigateMedia;
-window.goToMedia = goToMedia;

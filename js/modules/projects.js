@@ -1,12 +1,16 @@
 import { DeviceDetector, LayoutCache } from "./device-detector.js";
-import { getLanguage, getTranslations } from "./i18n.js";
+import { projectsData } from "../projects-data.js";
+import { getLanguage, getTranslations, onLanguageChange } from "./i18n.js";
 import {
   renderMedia,
   setCurrentMediaIndex,
-  initVideoTouchInteractivity,
   initMediaSwipe,
+  navigateMedia,
+  goToMedia,
 } from "./media.js";
 import { initPulseAnimations } from "./effects.js";
+import { loadScript } from "./utils.js";
+import { renderTerminal, initTerminalEvents, clearActiveTerminalTimeout } from "./api-terminal.js";
 
 const modal = document.getElementById("project-modal");
 const modalContent = document.getElementById("modal-content");
@@ -17,6 +21,13 @@ let modalSettleTimeoutId = null;
 let isNavigating = false;
 let keyPressed = {};
 let pageScrollLockState = null;
+let currentProjectIndex = 0;
+
+
+
+export function getCurrentProjectIndex() {
+  return currentProjectIndex;
+}
 
 export function updateModalRailOffset() {
   const root = document.documentElement;
@@ -116,19 +127,18 @@ export function scheduleModalSettled() {
 }
 
 export function renderModalContent(index) {
-  const projectsData = window.projectsData;
   const TRANSLATIONS = getTranslations();
   const p = projectsData[index];
   setCurrentMediaIndex(0);
 
   modalContent.innerHTML = `
         ${_renderModalHeader(p, index)}
-        ${_renderModalMediaSection(p, index)}
+        ${_renderModalMediaSection(p)}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div class="md:col-span-2">
                 ${_renderModalDescription(p, index)}
                 ${_renderModalFeatures(p, index)}
-                ${_renderModalCodeSnippet(p)}
+                ${p.isBackend ? "" : _renderModalCodeSnippet(p)}
             </div>
             <div class="md:col-span-1">
                 ${_renderModalTechStack(p)}
@@ -137,6 +147,13 @@ export function renderModalContent(index) {
     `;
 
   if (typeof lucide !== "undefined") lucide.createIcons();
+
+  if (p.isBackend) {
+    const terminalEl = modalContent.querySelector(".api-terminal");
+    if (terminalEl) {
+      initTerminalEvents(terminalEl, p);
+    }
+  }
 
   if (p.media.length > 1 && DeviceDetector.isTouchDevice) {
     initMediaSwipe();
@@ -201,8 +218,13 @@ function _renderModalHeader(project, index) {
     `;
 }
 
-function _renderModalMediaSection(project, index) {
+function _renderModalMediaSection(project) {
   const TRANSLATIONS = getTranslations();
+
+  if (project.isBackend) {
+    return renderTerminal(project);
+  }
+
   return `
         <div class="w-full mb-6">
             <div class="modal-media-wrapper relative w-full aspect-video rounded-3xl border border-white/10 shadow-2xl bg-black/50 overflow-hidden">
@@ -214,10 +236,10 @@ function _renderModalMediaSection(project, index) {
                       project.media.length > 1
                         ? `
                     <div class="media-overlay-layer">
-                        <button onclick="navigateMedia(-1)" class="media-overlay-btn media-overlay-btn--prev" aria-label="Previous media">
+                        <button data-media-action="prev" class="media-overlay-btn media-overlay-btn--prev" aria-label="${TRANSLATIONS["aria_prev_media"] || "Previous media"}">
                             <i data-lucide="chevron-left" class="w-5 h-5 md:w-6 md:h-6"></i>
                         </button>
-                        <button onclick="navigateMedia(1)" class="media-overlay-btn media-overlay-btn--next" aria-label="Next media">
+                        <button data-media-action="next" class="media-overlay-btn media-overlay-btn--next" aria-label="${TRANSLATIONS["aria_next_media"] || "Next media"}">
                             <i data-lucide="chevron-right" class="w-5 h-5 md:w-6 md:h-6"></i>
                         </button>
                     </div>
@@ -230,19 +252,19 @@ function _renderModalMediaSection(project, index) {
               project.media.length > 1
                 ? `
             <div class="media-controls flex items-center justify-center gap-4 mt-4">
-                <button onclick="navigateMedia(-1)" class="media-nav-btn media-bottom-nav-btn flex items-center justify-center" aria-label="Previous media">
+                <button data-media-action="prev" class="media-nav-btn media-bottom-nav-btn flex items-center justify-center" aria-label="${TRANSLATIONS["aria_prev_media"] || "Previous media"}">
                     <i data-lucide="chevron-left" class="w-5 h-5 md:w-6 md:h-6"></i>
                 </button>
                 <div class="flex items-center justify-center gap-2">
                     ${project.media
                       .map(
                         (_, i) => `
-                        <button onclick="goToMedia(${i})" class="media-dot ${i === 0 ? "is-active" : ""}" aria-label="Go to media ${i + 1}"></button>
+                        <button data-media-action="goto" data-media-index="${i}" class="media-dot ${i === 0 ? "is-active" : ""}" aria-label="${TRANSLATIONS["aria_go_to_media"] || "Go to media"} ${i + 1}"></button>
                     `
                       )
                       .join("")}
                 </div>
-                <button onclick="navigateMedia(1)" class="media-nav-btn media-bottom-nav-btn flex items-center justify-center" aria-label="Next media">
+                <button data-media-action="next" class="media-nav-btn media-bottom-nav-btn flex items-center justify-center" aria-label="${TRANSLATIONS["aria_next_media"] || "Next media"}">
                     <i data-lucide="chevron-right" class="w-5 h-5 md:w-6 md:h-6"></i>
                 </button>
             </div>
@@ -319,11 +341,32 @@ function _renderModalCodeSnippet(project) {
     `;
 }
 
+
+function _renderEngineeringBadges(project) {
+  if (!project.isBackend || !project.engineeringBadges?.length) return "";
+
+  const badgesHtml = project.engineeringBadges
+    .map(({ icon, variant, label }) => {
+      const variantClass = variant !== "default" ? ` engineering-badge-${variant}` : "";
+      return `
+        <div class="engineering-badge${variantClass}">
+          <i data-lucide="${icon}" class="engineering-badge-icon"></i>
+          <span>${label}</span>
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-6 mb-4">Engineering Status</h3>
+    <div class="flex flex-col gap-2 mb-8">${badgesHtml}</div>
+  `;
+}
+
 function _renderModalTechStack(project) {
   const TRANSLATIONS = getTranslations();
   const isTapeUsOut = project && project.title === "Tape Us Out";
   const isIdleJourney = project && project.title === "Idle Journey";
-  const platform = isTapeUsOut ? "steam" : isIdleJourney ? "browser" : "itch";
+  const platform = project.isBackend ? "github" : (isTapeUsOut ? "steam" : isIdleJourney ? "browser" : "itch");
 
   let labelKey;
   let defaultLabel;
@@ -333,6 +376,9 @@ function _renderModalTechStack(project) {
   } else if (platform === "browser") {
     labelKey = "modal_play_browser";
     defaultLabel = "Play in Browser";
+  } else if (platform === "github") {
+    labelKey = "modal_view_github";
+    defaultLabel = "View source on GitHub";
   } else {
     labelKey = "modal_view_itch";
     defaultLabel = "View on itch.io";
@@ -348,6 +394,9 @@ function _renderModalTechStack(project) {
   } else if (platform === "browser") {
     platformClasses =
       "bg-gradient-to-r from-[#1e3a8a] via-[#2563eb] to-[#0ea5e9] text-white border-[#38bdf8]/70 shadow-[0_0_22px_rgba(30,64,175,0.75)]";
+  } else if (platform === "github") {
+    platformClasses =
+      "bg-gradient-to-r from-zinc-800 via-zinc-700 to-zinc-600 text-white border-zinc-500/70 shadow-[0_0_22px_rgba(63,63,70,0.75)]";
   } else {
     platformClasses =
       "bg-gradient-to-r from-[#b91c1c] via-[#e11d48] to-[#fb923c] text-white border-[#fb7185]/70 shadow-[0_0_22px_rgba(185,28,28,0.75)]";
@@ -359,6 +408,9 @@ function _renderModalTechStack(project) {
     iconHtml = `<img src="${iconSrc}" alt="Steam logo" class="w-4 h-4 md:w-5 md:h-5 object-contain" loading="lazy" />`;
   } else if (platform === "browser") {
     iconHtml = `<i data-lucide="globe-2" class="w-4 h-4 md:w-5 md:h-5 text-white"></i>`;
+  } else if (platform === "github") {
+    const iconSrc = "https://cdn.simpleicons.org/github/ffffff";
+    iconHtml = `<img src="${iconSrc}" alt="GitHub logo" class="w-4 h-4 md:w-5 md:h-5 object-contain" loading="lazy" />`;
   } else {
     const iconSrc = "https://cdn.simpleicons.org/itchdotio/ffffff";
     iconHtml = `<img src="${iconSrc}" alt="itch.io logo" class="w-4 h-4 md:w-5 md:h-5 object-contain" loading="lazy" />`;
@@ -371,6 +423,8 @@ function _renderModalTechStack(project) {
       targetUrl = links.steam;
     } else if (platform === "itch" && links.itch) {
       targetUrl = links.itch;
+    } else if (platform === "github" && links.github) {
+      targetUrl = links.github;
     } else if (links.repo) {
       targetUrl = links.repo;
     } else if (links.play) {
@@ -382,12 +436,15 @@ function _renderModalTechStack(project) {
 
   const destinationType = platform;
 
+  const badgesHtml = _renderEngineeringBadges(project);
+
   return `
-        <div class="sticky top-12 p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+        <div class="sticky top-12 p-6 rounded-2xl border border-white/10 bg-zinc-900/90">
             <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">${TRANSLATIONS["modal_stack"] || "Tech Stack"}</h3>
             <div class="flex flex-wrap gap-2 mb-8">
                 ${project.stack.map((s) => `<span class="px-3 py-1 bg-black rounded-lg border border-white/10 text-xs text-white font-mono">${s}</span>`).join("")}
             </div>
+            ${badgesHtml}
             <button
               class="${baseButtonClasses} ${platformClasses}"
               type="button"
@@ -491,33 +548,20 @@ const PRISM_ASSETS = [
   "./assets/vendor/prism-nasm.min.js",
 ];
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-}
 
 async function loadProjectPrism() {
   if (window.Prism) return;
   try {
-    for (const asset of PRISM_ASSETS) {
-      await loadScript(asset);
-    }
+    await loadScript(PRISM_ASSETS[0]);
+    await Promise.all(PRISM_ASSETS.slice(1).map(loadScript));
   } catch (err) {
     console.warn("Failed to load Prism assets:", err);
   }
 }
 
 export function openProject(index) {
-  window.currentProjectIndex = index;
+  clearActiveTerminalTimeout();
+  currentProjectIndex = index;
   if (!modalContent) return;
 
   isNavigating = false;
@@ -566,23 +610,13 @@ export function openProject(index) {
     nextBtn.classList.remove("opacity-0", "pointer-events-none");
   }
 
-  const focusable = getModalFocusableElements();
-  if (focusable.length) {
-    let initialTarget = null;
-    const heading = modalContent.querySelector("h1");
-
-    if (heading) {
-      if (!heading.hasAttribute("tabindex")) {
-        heading.setAttribute("tabindex", "-1");
-      }
-      initialTarget = heading;
-    } else {
-      const closeBtn = document.getElementById("modal-close-btn");
-      initialTarget =
-        closeBtn && focusable.includes(closeBtn) ? closeBtn : focusable[0];
+  if (closeBtn) {
+    closeBtn.focus();
+  } else {
+    const focusable = getModalFocusableElements();
+    if (focusable.length) {
+      focusable[0].focus();
     }
-
-    initialTarget.focus();
   }
   document.addEventListener("keydown", handleModalFocusTrap);
 
@@ -608,6 +642,7 @@ export function openProject(index) {
 }
 
 export function navigateProject(direction) {
+  clearActiveTerminalTimeout();
   if (isNavigating) return;
   isNavigating = true;
 
@@ -622,13 +657,13 @@ export function navigateProject(direction) {
     nextBtn.style.opacity = "0.5";
   }
 
-  const totalProjects = window.projectsData.length;
-  window.currentProjectIndex = (window.currentProjectIndex + direction + totalProjects) % totalProjects;
+  const totalProjects = projectsData.length;
+  currentProjectIndex = (currentProjectIndex + direction + totalProjects) % totalProjects;
 
   modalContent.classList.add("transitioning");
 
   setTimeout(() => {
-    renderModalContent(window.currentProjectIndex);
+    renderModalContent(currentProjectIndex);
 
     const scrollContainer = document.getElementById("modal-scroll-container");
     if (scrollContainer) {
@@ -668,6 +703,7 @@ export function navigateProject(direction) {
 }
 
 export function closeProject() {
+  clearActiveTerminalTimeout();
   isNavigating = false;
   keyPressed = {};
 
@@ -718,28 +754,124 @@ export function closeProject() {
   lastFocusedElementBeforeModal = null;
 }
 
-export function initProjectCardsAccessibility() {
-  const cards = document.querySelectorAll(".accordion-card[data-project-index]");
-  if (!cards.length) return;
+export function renderProjects() {
+  const javaGrid = document.getElementById("java-projects-grid");
+  const gameGrid = document.getElementById("game-projects-grid");
+  if (!javaGrid && !gameGrid) return;
 
+  const TRANSLATIONS = getTranslations();
+
+  let javaHtml = "";
+  let gameHtml = "";
+
+  projectsData.forEach((project, index) => {
+    const verticalText = project.title.toUpperCase().replace(/\s+/g, "_");
+    const translateTitleKey = `project${index + 1}_title`;
+    const translateSubtitleKey = `project${index + 1}_subtitle`;
+    const title = TRANSLATIONS[translateTitleKey] || project.title;
+    const subtitle = TRANSLATIONS[translateSubtitleKey] || "";
+
+    const tagsHtml = project.stack.slice(0, 2).map(t => `
+        <span class="px-2 py-1 bg-zinc-900/90 text-white text-xs font-mono rounded border border-white/10">${t}</span>
+    `).join("");
+
+    const bgImage = (project.media && project.media.find(m => m.type === "image")) || { src: "" };
+    
+    const cardHtml = `
+      <div class="project-card group" role="button" tabindex="0" data-project-index="${index}">
+          <div class="project-card-img-wrapper">
+              <img src="${bgImage.src}" class="project-card-bg" alt="${title}" loading="lazy" decoding="async" />
+          </div>
+          <div class="project-card-vertical-text">${verticalText}</div>
+          <div class="project-card-content">
+              <h3 class="text-3xl font-bold text-white mb-2" data-translate="${translateTitleKey}">
+                  ${title}
+              </h3>
+              <div class="flex gap-2 mb-2">
+                  ${tagsHtml}
+              </div>
+              <p class="text-sm text-gray-300" data-translate="${translateSubtitleKey}">
+                  ${subtitle}
+              </p>
+          </div>
+          <div class="absolute top-6 right-6 flex items-center justify-center w-12 h-12 rounded-full border border-white/40 bg-black/60 backdrop-blur-md text-white opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 hover:bg-black/80 hover:border-white/80 hover:scale-110 z-30 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+              <i data-lucide="external-link" class="w-6 h-6"></i>
+          </div>
+      </div>
+    `;
+
+    if (project.isBackend) {
+      javaHtml += cardHtml;
+    } else {
+      gameHtml += cardHtml;
+    }
+  });
+
+  if (javaGrid) {
+    javaGrid.innerHTML = javaHtml;
+  }
+  if (gameGrid) {
+    gameGrid.innerHTML = gameHtml;
+  }
+
+  const cards = document.querySelectorAll(".project-card[data-project-index]");
   cards.forEach((card) => {
+    const index = parseInt(card.dataset.projectIndex, 10);
+    
+    card.addEventListener("click", () => {
+      openProject(index);
+    });
+    
     card.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        const index = parseInt(card.dataset.projectIndex, 10);
-        if (!Number.isNaN(index)) {
-          openProject(index);
-        }
-      }
-    });
-
-    card.addEventListener("click", () => {
-      const index = parseInt(card.dataset.projectIndex, 10);
-      if (!Number.isNaN(index)) {
         openProject(index);
       }
     });
   });
+
+  if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+  }
+}
+
+export function initProjectCardsAccessibility() {
+  renderProjects();
+
+  const closeBtn = document.getElementById("modal-close-btn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      closeProject();
+    });
+  }
+
+  const prevBtn = document.getElementById("modal-prev-btn");
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      navigateProject(-1);
+    });
+  }
+
+  const nextBtn = document.getElementById("modal-next-btn");
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      navigateProject(1);
+    });
+  }
+
+  if (modalContent) {
+    modalContent.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-media-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-media-action");
+      if (action === "prev") navigateMedia(-1);
+      else if (action === "next") navigateMedia(1);
+      else if (action === "goto") {
+        const idx = parseInt(btn.getAttribute("data-media-index"), 10);
+        if (!isNaN(idx)) goToMedia(idx);
+      }
+    });
+  }
 }
 
 document.addEventListener("keydown", (e) => {
@@ -777,7 +909,10 @@ window.addEventListener("blur", () => {
   keyPressed = {};
 });
 
-window.renderModalContent = renderModalContent;
-window.openProject = openProject;
-window.closeProject = closeProject;
-window.navigateProject = navigateProject;
+onLanguageChange(() => {
+  renderProjects();
+  const modal = document.getElementById("project-modal");
+  if (modal && modal.classList.contains("active")) {
+    renderModalContent(currentProjectIndex);
+  }
+});

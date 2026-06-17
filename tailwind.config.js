@@ -1,4 +1,5 @@
-/** @type {import('tailwindcss').Config} */
+const plugin = require('tailwindcss/plugin');
+
 module.exports = {
   content: ["./*.{html,js}", "./js/**/*.js"],
   darkMode: 'class',
@@ -19,7 +20,7 @@ module.exports = {
         bg: '#0a0a0a',
         surface: '#121212',
         border: '#27272a',
-        muted: '#d4d4d8',
+        muted: '#b4b4bb',
         white: '#ededed',
         accent: '#fff',
       },
@@ -29,5 +30,9 @@ module.exports = {
       }
     }
   },
-  plugins: [],
+  plugins: [
+    plugin(function({ addVariant }) {
+      addVariant('hover-hover', '@media (hover: hover)')
+    })
+  ],
 }

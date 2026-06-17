@@ -53,11 +53,13 @@ export const LayoutCache = {
     if (!el) return null;
     const rect = el.getBoundingClientRect();
     const style = window.getComputedStyle(el);
+    const pageX = window.pageXOffset || window.scrollX || 0;
+    const pageY = window.pageYOffset || window.scrollY || 0;
     const entry = {
-      left: rect.left,
-      top: rect.top,
-      right: rect.right,
-      bottom: rect.bottom,
+      left: rect.left + pageX,
+      top: rect.top + pageY,
+      right: rect.right + pageX,
+      bottom: rect.bottom + pageY,
       width: rect.width,
       height: rect.height,
       offsetLeft: el.offsetLeft,
@@ -96,6 +98,3 @@ export const LayoutCache = {
 };
 
 window.addEventListener("resize", () => LayoutCache.scheduleRefresh(), { passive: true });
-window.addEventListener("scroll", () => {
-  LayoutCache.scheduleRefresh();
-}, { passive: true });

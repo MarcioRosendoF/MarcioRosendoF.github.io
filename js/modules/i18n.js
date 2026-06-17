@@ -1,5 +1,13 @@
 import { DeviceDetector, MotionPreferences, LayoutCache } from "./device-detector.js";
 
+const transitionHooks = [];
+export function registerTransitionHook(hook) {
+  transitionHooks.push(hook);
+}
+export function getTransitionHooks() {
+  return transitionHooks;
+}
+
 let TRANSLATIONS = {};
 let LANG = localStorage.getItem("lang");
 
@@ -46,18 +54,13 @@ function notifyLanguageChange() {
   listeners.forEach((cb) => cb(LANG));
 }
 
-const timelineHooks = [];
 
-export function registerTimelineHook(hook) {
-  timelineHooks.push(hook);
-}
 
 let translationTimeline = null;
 
 export async function loadTranslations(lang, isInitialLoad = false) {
   try {
-    const timestamp = new Date().getTime();
-    const response = await fetch(`i18n/${lang}.json?v=${timestamp}`);
+    const response = await fetch(`i18n/${lang}.json?v=2.3`);
     if (!response.ok) {
       throw new Error(`Erro ao carregar tradução: ${response.statusText}`);
     }
@@ -65,6 +68,7 @@ export async function loadTranslations(lang, isInitialLoad = false) {
     translatePage(isInitialLoad);
   } catch (error) {
     console.error(error);
+    translatePage(isInitialLoad);
   }
 }
 
@@ -109,15 +113,14 @@ function translatePage(isInitialLoad = false) {
   const timelineDivider = timelineSection?.querySelector(".section-divider");
   const timelineContent = [
     timelineSection?.querySelector("h2")?.parentElement,
-    document.getElementById("timeline-mobile"),
-    document.getElementById("timeline-desktop"),
+    document.getElementById("timeline-container"),
   ];
 
   const projectsSection = document.getElementById("projects");
   const projectsDivider = projectsSection?.querySelector(".section-divider");
   const projectsContent = [
     projectsSection?.querySelector("h2")?.parentElement,
-    projectsSection?.querySelector(".accordion-container"),
+    ...(projectsSection ? Array.from(projectsSection.querySelectorAll("h3, .project-grid-container")) : []),
   ];
 
   const contactSection = document.getElementById("contact");
@@ -129,7 +132,15 @@ function translatePage(isInitialLoad = false) {
   const footer = document.querySelector("footer");
   const footerAnalyticsNotice = footer?.querySelector("p");
 
+  const headerCvBtn = document.getElementById("header-cv-btn");
+  const navItems = document.querySelectorAll(".nav-item");
+  const languageToggle = document.getElementById("language-toggle");
+  const languageToggleFooter = document.getElementById("language-toggle-footer");
+
   let orderedTargets = [
+    headerCvBtn,
+    languageToggle,
+    ...Array.from(navItems),
     ...heroChildren,
     projectsDivider,
     ...projectsContent,
@@ -140,6 +151,7 @@ function translatePage(isInitialLoad = false) {
     ...timelineContent,
     contactDivider,
     ...contactContent,
+    languageToggleFooter,
     footerAnalyticsNotice,
   ].filter((el) => el);
 
@@ -151,6 +163,9 @@ function translatePage(isInitialLoad = false) {
       }
       return true;
     });
+    orderedTargets.reverse();
+  } else {
+    orderedTargets = orderedTargets.filter((el) => el !== languageToggle && el !== languageToggleFooter);
   }
 
   const STAGGER_DELAY = 0.018;
@@ -175,14 +190,15 @@ function translatePage(isInitialLoad = false) {
       }
     });
 
+    const ariaElements = document.querySelectorAll("[data-translate-aria-label]");
+    ariaElements.forEach((element) => {
+      const key = element.getAttribute("data-translate-aria-label");
+      if (TRANSLATIONS[key]) {
+        element.setAttribute("aria-label", TRANSLATIONS[key]);
+      }
+    });
+
     LayoutCache.invalidate();
-
-    if (window.renderProjects) window.renderProjects();
-
-    const modal = document.getElementById("project-modal");
-    if (modal && modal.classList.contains("active") && typeof window.renderModalContent === "function") {
-      window.renderModalContent(window.currentProjectIndex);
-    }
 
     requestAnimationFrame(() => {
       if (typeof ScrollTrigger !== "undefined" && !DeviceDetector.isMobile) {
@@ -236,7 +252,7 @@ function translatePage(isInitialLoad = false) {
   timeline.set(document.body, { pointerEvents: "none" }, "start");
   timeline.set(orderedTargets, { transition: "none" }, "start");
 
-  timelineHooks.forEach((hook) => {
+  getTransitionHooks().forEach((hook) => {
     if (typeof hook.hide === "function") {
       const anim = hook.hide();
       if (anim) timeline.add(anim, "start");
@@ -255,7 +271,7 @@ function translatePage(isInitialLoad = false) {
   timeline.call(updateContent);
   timeline.add("enter", ">+0.06");
 
-  timelineHooks.forEach((hook) => {
+  getTransitionHooks().forEach((hook) => {
     if (typeof hook.show === "function") {
       const anim = hook.show();
       if (anim) timeline.add(anim, "enter");

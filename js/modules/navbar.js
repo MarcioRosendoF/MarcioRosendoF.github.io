@@ -1,5 +1,5 @@
 import { DeviceDetector, LayoutCache } from "./device-detector.js";
-import { getLanguage, onLanguageChange, registerTimelineHook } from "./i18n.js";
+import { getLanguage, onLanguageChange, registerTransitionHook } from "./i18n.js";
 
 class BaseHighlight {
   constructor() {
@@ -234,6 +234,13 @@ class NavbarHighlight extends BaseHighlight {
     return this.navbarContainers;
   }
 
+  _shouldSlideOnHide() {
+    const bottomLayoutQuery = window.matchMedia(
+      "(max-width: 820px), (max-height: 540px)"
+    );
+    return !bottomLayoutQuery.matches;
+  }
+
   setActive(element) {
     if (!element) return;
 
@@ -245,7 +252,7 @@ class NavbarHighlight extends BaseHighlight {
   }
 
   updateHighlight() {
-    if (this.activeElement) {
+    if (this.activeElement && this.lamp) {
       const pos = this._calculatePosition(this.activeElement);
       gsap.set(this.lamp, {
         left: pos.left,
@@ -282,7 +289,7 @@ class NavbarHighlight extends BaseHighlight {
 
     const docHeight = document.documentElement.scrollHeight;
     const scrollY = window.scrollY || window.pageYOffset;
-    const isNearBottom = scrollY + viewportHeight >= docHeight - 15;
+    const isNearBottom = scrollY + viewportHeight >= docHeight - 100;
 
     if (isNearBottom) {
       bestSection = this.sectionElements[this.sectionElements.length - 1];
@@ -349,6 +356,7 @@ class NavbarHighlight extends BaseHighlight {
   }
 
   _animateToElement(element, duration = 0.4) {
+    if (!this.lamp) return;
     const adaptiveDuration = this._getAdaptiveDuration(element, duration, {
       min: 0.18,
       max: duration,
@@ -408,7 +416,7 @@ class LanguageHighlight extends BaseHighlight {
   }
 
   setActive(element) {
-    if (!element || this.isTranslating) return;
+    if (!element) return;
 
     this.activeElement = element;
     this._animateToElement(element);
@@ -443,6 +451,7 @@ class LanguageHighlight extends BaseHighlight {
   }
 
   _animateToElement(element, duration = 0.3) {
+    if (!this.lamp) return;
     const adaptiveDuration = this._getAdaptiveDuration(element, duration, {
       min: 0.16,
       max: duration,
@@ -467,13 +476,69 @@ export const footerLanguageHighlight = new LanguageHighlight({
   hoverOutlineId: "lang-hover-outline-footer",
 });
 
+let mobileFabScrollHandler = null;
+let mobileFabOutsideClickHandler = null;
+
+function initMobileFab() {
+  const trigger = document.getElementById("mobile-fab-trigger");
+  const menu = document.getElementById("mobile-fab-menu");
+  if (!trigger || !menu) return;
+
+  const menuIcon = trigger.querySelector(".fab-icon-menu");
+  const closeIcon = trigger.querySelector(".fab-icon-close");
+
+  if (mobileFabScrollHandler) {
+    window.removeEventListener("scroll", mobileFabScrollHandler);
+  }
+  if (mobileFabOutsideClickHandler) {
+    document.removeEventListener("click", mobileFabOutsideClickHandler);
+  }
+
+  const closeMenu = () => {
+    menu.classList.remove("active");
+    trigger.classList.remove("active");
+    window.removeEventListener("scroll", mobileFabScrollHandler);
+  };
+
+  mobileFabScrollHandler = () => {
+    if (menu.classList.contains("active")) {
+      closeMenu();
+    }
+  };
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isActive = menu.classList.toggle("active");
+    trigger.classList.toggle("active", isActive);
+    if (isActive) {
+      window.addEventListener("scroll", mobileFabScrollHandler, { passive: true });
+    } else {
+      window.removeEventListener("scroll", mobileFabScrollHandler);
+    }
+  });
+
+  menu.querySelectorAll(".fab-menu-item").forEach(item => {
+    item.addEventListener("click", () => {
+      closeMenu();
+    });
+  });
+
+  mobileFabOutsideClickHandler = (e) => {
+    if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+      closeMenu();
+    }
+  };
+  document.addEventListener("click", mobileFabOutsideClickHandler);
+}
+
 export function initNavbar() {
   navbarHighlight.init();
   languageHighlight.init();
   footerLanguageHighlight.init();
+  initMobileFab();
 }
 
-export function updateLanguageToggle(lang) {
+export function updateLanguageToggle(lang, animate = false) {
   const currentLang = lang || getLanguage();
   const desktopToggle = document.getElementById("language-toggle");
   if (desktopToggle) {
@@ -482,8 +547,12 @@ export function updateLanguageToggle(lang) {
     if (languageHighlight) {
       const activeBtn = desktopToggle.querySelector(`[data-lang="${currentLang}"]`);
       if (activeBtn) {
-        languageHighlight.activeElement = activeBtn;
-        languageHighlight.updateHighlight();
+        if (animate) {
+          languageHighlight.setActive(activeBtn);
+        } else {
+          languageHighlight.activeElement = activeBtn;
+          languageHighlight.updateHighlight();
+        }
       }
     }
   }
@@ -500,8 +569,12 @@ export function updateLanguageToggle(lang) {
     const footerToggle = document.getElementById("language-toggle-footer");
     const activeBtn = footerToggle?.querySelector(`[data-lang="${currentLang}"]`);
     if (activeBtn) {
-      footerLanguageHighlight.activeElement = activeBtn;
-      footerLanguageHighlight.updateHighlight();
+      if (animate) {
+        footerLanguageHighlight.setActive(activeBtn);
+      } else {
+        footerLanguageHighlight.activeElement = activeBtn;
+        footerLanguageHighlight.updateHighlight();
+      }
     }
   }
 
@@ -516,14 +589,14 @@ onLanguageChange((lang) => {
     const active = navbarHighlight.activeElement;
     if (active) navbarHighlight.setActive(active);
   }
-  updateLanguageToggle(lang);
+  updateLanguageToggle(lang, true);
 });
 
-registerTimelineHook({
+registerTransitionHook({
   hide: () => {
     const timeline = gsap.timeline();
     if (navbarHighlight) timeline.add(navbarHighlight.hide(), 0);
-    if (languageHighlight && !DeviceDetector.isMobile) timeline.add(languageHighlight.hide(), 0);
+    if (languageHighlight) timeline.add(languageHighlight.hide(), 0);
     return timeline;
   },
   show: () => {
@@ -535,7 +608,7 @@ registerTimelineHook({
       if (active) navbarHighlight.setActive(active);
     }, 0);
     if (navbarHighlight) timeline.add(navbarHighlight.show(), 0);
-    if (languageHighlight && !DeviceDetector.isMobile) timeline.add(languageHighlight.show(), 0);
+    if (languageHighlight) timeline.add(languageHighlight.show(), 0);
     return timeline;
   }
 });
