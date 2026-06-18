@@ -213,6 +213,7 @@ function translatePage(isInitialLoad = false) {
   if (MotionPreferences.prefersReducedMotion) {
     updateContent();
     notifyLanguageChange();
+    document.documentElement.classList.remove("lang-loading");
     return;
   }
 
@@ -234,6 +235,7 @@ function translatePage(isInitialLoad = false) {
   if (isInitialLoad) {
     updateContent();
     notifyLanguageChange();
+    document.documentElement.classList.remove("lang-loading");
     animateHeroEntrance();
     return;
   }

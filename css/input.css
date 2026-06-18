@@ -32,6 +32,12 @@
     body {
         margin: 0;
         padding: 0;
+        opacity: 1;
+        transition: opacity 0.4s ease-out;
+    }
+    html.lang-loading body {
+        opacity: 0 !important;
+        pointer-events: none;
     }
     html.lenis,
     html.lenis body {
