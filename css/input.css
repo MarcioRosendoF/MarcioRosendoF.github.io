@@ -897,19 +897,20 @@ iframe {
 @media (max-width: 1024px) {
     .modal-nav-btn {
         display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         top: auto !important;
         bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
         width: 3.5rem;
         height: 3.5rem;
-        background: rgba(10, 10, 10, 0.8) !important;
+        background: rgba(10, 10, 10, 0.9) !important;
         backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.15);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         z-index: 9999;
         color: #fff !important;
-        padding-bottom: env(safe-area-inset-bottom);
-
-        transform: translateY(0) !important;
+        transform: none !important;
     }
 
     #modal-prev-btn {
@@ -923,12 +924,20 @@ iframe {
     }
 
     #modal-close-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         right: calc(var(--modal-edge-pad) + var(--modal-rail-offset)) !important;
     }
 
     .modal-nav-btn:active {
-        transform: translateY(0) scale(0.9) !important;
-        transition: transform 0.1s ease !important;
+        transform: scale(0.9) !important;
+        transition: transform 0.15s ease !important;
+    }
+
+    #modal-close-btn:active {
+        transform: scale(0.9) !important;
+        transition: transform 0.15s ease !important;
     }
 }
 
