@@ -158,5 +158,15 @@
     "Implementei tratamento centralizado de exceções (ControllerAdvice) para padronizar as respostas de erro da API.",
     "Apliquei regras de validação declarativa com Bean Validation e documentei as APIs com OpenAPI/Swagger."
   ],
+  "project7_title": "Order Notification Service",
+  "project7_subtitle": "API REST com arquitetura orientada a eventos assíncronos usando RabbitMQ",
+  "project7_description": "API REST para gerenciamento de pedidos onde cada transição de status publica eventos assíncronos no RabbitMQ, os quais são consumidos para gerar registros de notificação. Desenvolvido com Java 17, Spring Boot 3 e PostgreSQL.",
+  "project7_challenge": "Implementar comunicação assíncrona confiável utilizando filas de mensagens, gerenciar o fluxo de dados orientado a eventos com o RabbitMQ e configurar estratégias de persistência física isolada de logs.",
+  "project7_features": [
+    "Implementei a publicação e o consumo assíncrono de eventos utilizando RabbitMQ e Spring AMQP para transições de status de pedidos.",
+    "Projetei o schema relacional e gerenciei as migrações usando Flyway, juntamente com o Bean Validation para garantir a integridade dos dados.",
+    "Integrei Testcontainers com JUnit 5 para realizar testes de integração confiáveis contra instâncias efêmeras do RabbitMQ e PostgreSQL.",
+    "Configurei estratégias independentes de persistência física de logs utilizando Rolling Files via logback-spring.xml para o ambiente de produção."
+  ],
   "toast_contact_error": "Não foi possível enviar a mensagem. Tente novamente ou envie para contact@marciorosendo.com"
 }

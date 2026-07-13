@@ -553,6 +553,87 @@ public class TaskController {
 }`,
     language: "java",
     fileName: "TaskController.java"
+  },
+  {
+    title: "Order Notification Service",
+    isBackend: true,
+    engineeringBadges: [
+      { icon: "message-square", variant: "info", label: "Messaging: RabbitMQ" },
+      { icon: "check-circle", variant: "success", label: "Tests: JUnit 5 + Mockito" },
+      { icon: "database", variant: "default", label: "PostgreSQL & Flyway" },
+      { icon: "box", variant: "default", label: "Docker & Testcontainers" },
+    ],
+    subtitle: {
+      en: "REST API with asynchronous event-driven architecture using RabbitMQ",
+      "pt-br": "API REST com arquitetura orientada a eventos assíncronos usando RabbitMQ"
+    },
+    stack: ["Java 17", "Spring Boot 3", "RabbitMQ", "PostgreSQL", "Flyway", "Testcontainers", "JUnit 5", "Docker"],
+    links: {
+      github: "https://github.com/MarcioRosendoF/order-notification-service"
+    },
+    media: [
+      { type: "image", src: "Images/ImagensProjetos/Backend/order_notification_cover.jpg" }
+    ],
+    simulatedEndpoints: {
+      "POST /api/v1/orders": {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        requestBody: {
+          customerId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          items: [
+            { productName: "Wireless Keyboard", quantity: 1, unitPrice: 150.00 },
+            { productName: "Gaming Mouse", quantity: 2, unitPrice: 85.50 }
+          ]
+        },
+        responseStatus: "201 Created",
+        responseBody: {
+          orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+          status: "PENDING",
+          totalAmount: 321.00,
+          message: "Order received. Processing asynchronously."
+        }
+      },
+      "AMQP order.created": {
+        method: "AMQP",
+        headers: {
+          "Exchange": "order.exchange",
+          "Routing-Key": "order.created.key"
+        },
+        requestBody: {
+          eventId: "evt_728391823",
+          timestamp: "2026-07-13T14:45:00Z",
+          payload: {
+            orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            status: "PENDING",
+            customerId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          }
+        },
+        responseStatus: "ACKNOWLEDGED",
+        responseBody: {
+          worker: "NotificationConsumer-1",
+          status: "Message Processed Successfully",
+          action: "Email notification queued for customer."
+        }
+      },
+      "GET /api/v1/notifications?orderId=9b1deb4d": {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        },
+        responseStatus: "200 OK",
+        responseBody: [
+          {
+            notificationId: "notif_550e8400",
+            orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            type: "ORDER_RECEIVED",
+            message: "Your order has been received and is being processed.",
+            sentAt: "2026-07-13T14:45:01Z"
+          }
+        ]
+      }
+    }
   }
 ];
 
