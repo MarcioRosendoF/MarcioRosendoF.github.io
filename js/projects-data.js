@@ -307,7 +307,7 @@ public class RoomViewController : MonoBehaviour
       github: "https://github.com/MarcioRosendoF/booking-scheduler-api"
     },
     media: [
-      { type: "image", src: "Images/ImagensProjetos/Backend/booking_scheduler_api_cover.png" }
+      { type: "image", src: "Images/ImagensProjetos/Backend/booking_scheduler_api_cover.webp" }
     ],
     simulatedEndpoints: {
       "POST /providers": {
@@ -452,7 +452,7 @@ public class RoomViewController : MonoBehaviour
       github: "https://github.com/MarcioRosendoF/order-notification-service"
     },
     media: [
-      { type: "image", src: "Images/ImagensProjetos/Backend/order_notification_cover.jpg" }
+      { type: "image", src: "Images/ImagensProjetos/Backend/order_notification_cover.webp" }
     ],
     simulatedEndpoints: {
       "POST /api/v1/orders": {
@@ -533,7 +533,7 @@ public class RoomViewController : MonoBehaviour
       github: "https://github.com/MarcioRosendoF/purchase-verified-review-api"
     },
     media: [
-      {type: "image", src: "Images/ImagensProjetos/Backend/purchase_verified_api_cover.png"}
+      {type: "image", src: "Images/ImagensProjetos/Backend/purchase_verified_api_cover.webp"}
     ],
     simulatedEndpoints: {
       "POST /api/v1/auth/register": {
@@ -672,7 +672,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       github: "https://github.com/MarcioRosendoF/task-manager-api"
     },
     media: [
-      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_api_cover.png" }
+      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_api_cover.webp" }
     ],
     simulatedEndpoints: {
       "GET /api/v1/tasks": {
