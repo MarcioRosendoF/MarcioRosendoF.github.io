@@ -1898,6 +1898,12 @@ pre[class*="language-"] {
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+.terminal-method-patch {
+    background: rgba(167, 139, 250, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
 .terminal-method-amqp {
     color: #ff6600;
     background: rgba(255, 102, 0, 0.1);

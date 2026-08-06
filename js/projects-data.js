@@ -290,6 +290,232 @@ public class RoomViewController : MonoBehaviour
     fileName: "GameManager.cs"
   },
   {
+    title: "Booking Scheduler API",
+    isBackend: true,
+    engineeringBadges: [
+      { icon: "check-circle",   variant: "success", label: "Tests: Testcontainers" },
+      { icon: "shield-check",   variant: "info",    label: "Security: Keycloak OAuth2" },
+      { icon: "zap",            variant: "default", label: "Cache: Redis" },
+      { icon: "message-square", variant: "default", label: "Messaging: RabbitMQ" },
+    ],
+    subtitle: {
+      en: "High-performance booking REST API with OAuth2, Redis cache and event-driven notifications",
+      "pt-br": "API REST de agendamentos com OAuth2, cache Redis e notificações orientadas a eventos"
+    },
+    stack: ["Java 21", "Spring Boot 3.4", "PostgreSQL 15", "Redis 7", "RabbitMQ", "Keycloak 24", "Testcontainers", "Docker", "GitHub Actions"],
+    links: {
+      github: "https://github.com/MarcioRosendoF/booking-scheduler-api"
+    },
+    media: [
+      { type: "image", src: "Images/ImagensProjetos/Backend/booking_scheduler_api_cover.png" }
+    ],
+    simulatedEndpoints: {
+      "POST /providers": {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJSUzI1Ni..."
+        },
+        requestBody: {
+          name: "Studio Ink Barber",
+          bio: "Premium barbershop and grooming services"
+        },
+        responseStatus: "201 Created",
+        responseBody: {
+          id: "b3f1c2a4-7d5e-4c8b-9a1f-2e6d8c0b4a72",
+          name: "Studio Ink Barber",
+          bio: "Premium barbershop and grooming services",
+          createdAt: "2026-07-20T14:32:11Z"
+        }
+      },
+      "POST /providers/{providerId}/slots": {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJSUzI1Ni..."
+        },
+        requestBody: {
+          startTime: "2026-08-01T09:00:00Z",
+          endTime: "2026-08-01T10:00:00Z"
+        },
+        responseStatus: "201 Created",
+        responseBody: {
+          id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+          providerId: "b3f1c2a4-7d5e-4c8b-9a1f-2e6d8c0b4a72",
+          startTime: "2026-08-01T09:00:00Z",
+          endTime: "2026-08-01T10:00:00Z",
+          booked: false
+        }
+      },
+      "GET /providers/{providerId}/slots/available": {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        },
+        responseStatus: "200 OK",
+        responseBody: {
+          content: [
+            {
+              id: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+              startTime: "2026-08-01T09:00:00Z",
+              endTime: "2026-08-01T10:00:00Z",
+              booked: false
+            },
+            {
+              id: "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+              startTime: "2026-08-01T10:00:00Z",
+              endTime: "2026-08-01T11:00:00Z",
+              booked: false
+            }
+          ],
+          page: 0,
+          size: 10,
+          totalElements: 2,
+          totalPages: 1
+        }
+      },
+      "POST /bookings": {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJSUzI1Ni..."
+        },
+        requestBody: {
+          serviceId: "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+          slotId: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+        },
+        responseStatus: "201 Created",
+        responseBody: {
+          id: "f6e5d4c3-b2a1-4c3d-2e1f-0a9b8c7d6e5f",
+          serviceId: "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b",
+          slotId: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+          status: "PENDING",
+          createdAt: "2026-07-20T15:05:44Z"
+        }
+      },
+      "PATCH /bookings/{id}/cancel": {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJSUzI1Ni..."
+        },
+        requestBody: {
+          reason: "Personal schedule conflict"
+        },
+        responseStatus: "200 OK",
+        responseBody: {
+          id: "f6e5d4c3-b2a1-4c3d-2e1f-0a9b8c7d6e5f",
+          status: "CANCELLED",
+          cancelledAt: "2026-07-21T09:12:30Z",
+          cancellationReason: "Personal schedule conflict"
+        }
+      },
+      "GET /notifications": {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJSUzI1Ni..."
+        },
+        responseStatus: "200 OK",
+        responseBody: [
+          {
+            id: "0a1b2c3d-4e5f-4a6b-7c8d-9e0f1a2b3c4d",
+            type: "BOOKING_CONFIRMED",
+            message: "Your booking for 2026-08-01T09:00:00Z was confirmed.",
+            sentAt: "2026-07-20T15:05:46Z"
+          },
+          {
+            id: "5e4d3c2b-1a0f-4e5d-6c7b-8a9f0e1d2c3b",
+            type: "BOOKING_REMINDER",
+            message: "Reminder: your appointment starts in 24 hours.",
+            sentAt: "2026-07-31T09:00:00Z"
+          }
+        ]
+      }
+    }
+  },
+  {
+    title: "Order Notification Service",
+    isBackend: true,
+    engineeringBadges: [
+      { icon: "message-square", variant: "info", label: "Messaging: RabbitMQ" },
+      { icon: "check-circle", variant: "success", label: "Tests: JUnit 5 + Mockito" },
+      { icon: "database", variant: "default", label: "PostgreSQL & Flyway" },
+      { icon: "box", variant: "default", label: "Docker & Testcontainers" },
+    ],
+    subtitle: {
+      en: "REST API with asynchronous event-driven architecture using RabbitMQ",
+      "pt-br": "API REST com arquitetura orientada a eventos assíncronos usando RabbitMQ"
+    },
+    stack: ["Java 17", "Spring Boot 3", "RabbitMQ", "PostgreSQL", "Flyway", "Testcontainers", "JUnit 5", "Docker"],
+    links: {
+      github: "https://github.com/MarcioRosendoF/order-notification-service"
+    },
+    media: [
+      { type: "image", src: "Images/ImagensProjetos/Backend/order_notification_cover.jpg" }
+    ],
+    simulatedEndpoints: {
+      "POST /api/v1/orders": {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        requestBody: {
+          customerId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          items: [
+            { productName: "Wireless Keyboard", quantity: 1, unitPrice: 150.00 },
+            { productName: "Gaming Mouse", quantity: 2, unitPrice: 85.50 }
+          ]
+        },
+        responseStatus: "201 Created",
+        responseBody: {
+          orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+          status: "PENDING",
+          totalAmount: 321.00,
+          message: "Order received. Processing asynchronously."
+        }
+      },
+      "AMQP order.created": {
+        method: "AMQP",
+        headers: {
+          "Exchange": "order.exchange",
+          "Routing-Key": "order.created.key"
+        },
+        requestBody: {
+          eventId: "evt_728391823",
+          timestamp: "2026-07-13T14:45:00Z",
+          payload: {
+            orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            status: "PENDING",
+            customerId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          }
+        },
+        responseStatus: "ACKNOWLEDGED",
+        responseBody: {
+          worker: "NotificationConsumer-1",
+          status: "Message Processed Successfully",
+          action: "Email notification queued for customer."
+        }
+      },
+      "GET /api/v1/notifications?orderId=9b1deb4d": {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        },
+        responseStatus: "200 OK",
+        responseBody: [
+          {
+            notificationId: "notif_550e8400",
+            orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+            type: "ORDER_RECEIVED",
+            message: "Your order has been received and is being processed.",
+            sentAt: "2026-07-13T14:45:01Z"
+          }
+        ]
+      }
+    }
+  },
+  {
     title: "Purchase Verified Review API",
     isBackend: true,
     engineeringBadges: [
@@ -554,87 +780,6 @@ public class TaskController {
     language: "java",
     fileName: "TaskController.java"
   },
-  {
-    title: "Order Notification Service",
-    isBackend: true,
-    engineeringBadges: [
-      { icon: "message-square", variant: "info", label: "Messaging: RabbitMQ" },
-      { icon: "check-circle", variant: "success", label: "Tests: JUnit 5 + Mockito" },
-      { icon: "database", variant: "default", label: "PostgreSQL & Flyway" },
-      { icon: "box", variant: "default", label: "Docker & Testcontainers" },
-    ],
-    subtitle: {
-      en: "REST API with asynchronous event-driven architecture using RabbitMQ",
-      "pt-br": "API REST com arquitetura orientada a eventos assíncronos usando RabbitMQ"
-    },
-    stack: ["Java 17", "Spring Boot 3", "RabbitMQ", "PostgreSQL", "Flyway", "Testcontainers", "JUnit 5", "Docker"],
-    links: {
-      github: "https://github.com/MarcioRosendoF/order-notification-service"
-    },
-    media: [
-      { type: "image", src: "Images/ImagensProjetos/Backend/order_notification_cover.jpg" }
-    ],
-    simulatedEndpoints: {
-      "POST /api/v1/orders": {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        requestBody: {
-          customerId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          items: [
-            { productName: "Wireless Keyboard", quantity: 1, unitPrice: 150.00 },
-            { productName: "Gaming Mouse", quantity: 2, unitPrice: 85.50 }
-          ]
-        },
-        responseStatus: "201 Created",
-        responseBody: {
-          orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-          status: "PENDING",
-          totalAmount: 321.00,
-          message: "Order received. Processing asynchronously."
-        }
-      },
-      "AMQP order.created": {
-        method: "AMQP",
-        headers: {
-          "Exchange": "order.exchange",
-          "Routing-Key": "order.created.key"
-        },
-        requestBody: {
-          eventId: "evt_728391823",
-          timestamp: "2026-07-13T14:45:00Z",
-          payload: {
-            orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-            status: "PENDING",
-            customerId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-          }
-        },
-        responseStatus: "ACKNOWLEDGED",
-        responseBody: {
-          worker: "NotificationConsumer-1",
-          status: "Message Processed Successfully",
-          action: "Email notification queued for customer."
-        }
-      },
-      "GET /api/v1/notifications?orderId=9b1deb4d": {
-        method: "GET",
-        headers: {
-          "Accept": "application/json"
-        },
-        responseStatus: "200 OK",
-        responseBody: [
-          {
-            notificationId: "notif_550e8400",
-            orderId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-            type: "ORDER_RECEIVED",
-            message: "Your order has been received and is being processed.",
-            sentAt: "2026-07-13T14:45:01Z"
-          }
-        ]
-      }
-    }
-  }
 ];
 
 export const timelineData = [
