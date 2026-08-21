@@ -367,6 +367,7 @@ function _renderModalTechStack(project) {
   const isTapeUsOut = project && project.title === "Tape Us Out";
   const isIdleJourney = project && project.title === "Idle Journey";
   const platform = project.isBackend ? "github" : (isTapeUsOut ? "steam" : isIdleJourney ? "browser" : "itch");
+  const hasFrontend = project.links && project.links.frontend;
 
   let labelKey;
   let defaultLabel;
@@ -383,8 +384,6 @@ function _renderModalTechStack(project) {
     labelKey = "modal_view_itch";
     defaultLabel = "View on itch.io";
   }
-  const hasFrontend = project.links && project.links.frontend;
-
   const frontendLabel = TRANSLATIONS["modal_view_github_frontend"] || "View frontend on GitHub";
 
   const buttonLabel = TRANSLATIONS[labelKey] || defaultLabel;
