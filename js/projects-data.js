@@ -672,7 +672,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       github: "https://github.com/MarcioRosendoF/task-manager-api"
     },
     media: [
-      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_api_cover.webp" }
+      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_api_cover.webp" },
+      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_frontend.webp" }
     ],
     simulatedEndpoints: {
       "GET /api/v1/tasks": {
