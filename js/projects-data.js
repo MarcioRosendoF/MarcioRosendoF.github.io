@@ -664,17 +664,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       { icon: "book-open",    variant: "info",    label: "Swagger OpenAPI" },
     ],
     subtitle: {
-      en: "Java Spring Boot API featuring Bean Validation and immutable records, with a React frontend",
-      "pt-br": "API Java Spring Boot com validação via Bean Validation e records imutáveis, com frontend em React"
+      en: "Java Spring Boot REST API with data validation and React web interface",
+      "pt-br": "API REST em Java Spring Boot com validação de dados e interface web em React"
     },
-    stack: ["Java 17", "Spring Boot", "Spring Data JPA", "H2 Database", "Bean Validation", "OpenAPI (Swagger)"],
+    stack: ["Java 17", "Spring Boot", "Spring Data JPA", "H2 Database", "Bean Validation", "OpenAPI (Swagger)", "React"],
     links: {
       github: "https://github.com/MarcioRosendoF/task-manager-api",
       frontend: "https://github.com/MarcioRosendoF/task-manager-frontend"
     },
     media: [
-      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_api_cover.webp" },
-      { type: "image", src: "Images/ImagensProjetos/Backend/task_manager_frontend.webp" }
+      { type: "image", src: "Images/ImagensProjetos/TaskManager/task_manager_api_cover.webp" },
+      { type: "image", src: "Images/ImagensProjetos/TaskManager/task_manager_frontend.webp" }
     ],
     simulatedEndpoints: {
       "GET /api/v1/tasks": {
