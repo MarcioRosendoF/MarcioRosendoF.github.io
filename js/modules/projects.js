@@ -377,12 +377,16 @@ function _renderModalTechStack(project) {
     labelKey = "modal_play_browser";
     defaultLabel = "Play in Browser";
   } else if (platform === "github") {
-    labelKey = "modal_view_github";
-    defaultLabel = "View source on GitHub";
+    labelKey = hasFrontend ? "modal_view_github_backend" : "modal_view_github";
+    defaultLabel = hasFrontend ? "View backend on GitHub" : "View source on GitHub";
   } else {
     labelKey = "modal_view_itch";
     defaultLabel = "View on itch.io";
   }
+  const hasFrontend = project.links && project.links.frontend;
+
+  const frontendLabel = TRANSLATIONS["modal_view_github_frontend"] || "View frontend on GitHub";
+
   const buttonLabel = TRANSLATIONS[labelKey] || defaultLabel;
 
   const baseButtonClasses =
@@ -456,37 +460,51 @@ function _renderModalTechStack(project) {
               ${iconHtml}
               <span>${buttonLabel}</span>
             </button>
+            ${hasFrontend ? `
+            <button
+              class="${baseButtonClasses} ${platformClasses}"
+              type="button"
+              data-project-cta="frontend"
+              data-project-title="${project.title}"
+              data-project-destination="github"
+              data-project-url="${project.links.frontend}"
+            >
+              ${iconHtml}
+              <span>${frontendLabel}</span>
+            </button>` : ""}
         </div>
     `;
 }
 
 export function bindProjectCTAAnalytics() {
-  const cta = document.querySelector("#project-modal [data-project-cta='primary']");
-  if (!cta) return;
+  const ctas = document.querySelectorAll("#project-modal [data-project-cta]");
+  if (!ctas.length) return;
 
-  const title = cta.dataset.projectTitle || "Unknown Project";
-  const destinationType = cta.dataset.projectDestination || "unknown";
-  const destinationUrl = cta.dataset.projectUrl || cta.href;
+  ctas.forEach((cta) => {
+    const title = cta.dataset.projectTitle || "Unknown Project";
+    const destinationType = cta.dataset.projectDestination || "unknown";
+    const destinationUrl = cta.dataset.projectUrl || cta.href;
 
-  cta.removeEventListener("click", cta._gaClickHandler || (() => { }));
+    cta.removeEventListener("click", cta._gaClickHandler || (() => { }));
 
-  const handler = () => {
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("event", "project_outbound_click", {
-        event_category: "projects",
-        event_label: title,
-        destination_type: destinationType,
-        destination: destinationUrl,
-      });
-    }
+    const handler = () => {
+      if (typeof window !== "undefined" && typeof window.gtag === "function") {
+        window.gtag("event", "project_outbound_click", {
+          event_category: "projects",
+          event_label: title,
+          destination_type: destinationType,
+          destination: destinationUrl,
+        });
+      }
 
-    if (destinationUrl) {
-      window.open(destinationUrl, "_blank", "noopener,noreferrer");
-    }
-  };
+      if (destinationUrl) {
+        window.open(destinationUrl, "_blank", "noopener,noreferrer");
+      }
+    };
 
-  cta._gaClickHandler = handler;
-  cta.addEventListener("click", handler);
+    cta._gaClickHandler = handler;
+    cta.addEventListener("click", handler);
+  });
 }
 
 export function getModalFocusableElements() {

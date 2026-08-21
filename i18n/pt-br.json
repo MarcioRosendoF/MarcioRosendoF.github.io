@@ -139,6 +139,8 @@
   "aria_next_media": "Próxima mídia",
   "aria_go_to_media": "Ir para mídia",
   "modal_view_github": "Ver código no GitHub",
+  "modal_view_github_backend": "Ver backend no GitHub",
+  "modal_view_github_frontend": "Ver frontend no GitHub",
   "project5_title": "Booking Scheduler API",
   "project5_subtitle": "API REST de agendamentos com OAuth2, cache Redis e notificações orientadas a eventos",
   "project5_description": "API REST para gerenciamento de agendamentos e reservas de serviços (barbearias, consultórios, academias). Construída com Java 21, Spring Boot 3.4, PostgreSQL, Redis, RabbitMQ e Keycloak, aplica regras reais de validação de conflito de horários, autenticação OAuth2 Resource Server, cache Redis com invalidação automática e notificações assíncronas orientadas a eventos. Documentação ao vivo: https://booking-scheduler-api-production.up.railway.app/swagger-ui/index.html",
