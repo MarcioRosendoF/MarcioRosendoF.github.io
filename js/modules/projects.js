@@ -138,7 +138,7 @@ export function renderModalContent(index) {
             <div class="md:col-span-2">
                 ${_renderModalDescription(p, index)}
                 ${_renderModalFeatures(p, index)}
-                ${p.isBackend ? "" : _renderModalCodeSnippet(p)}
+                ${p.isBackend ? _renderModalFrontendPreview(p) : _renderModalCodeSnippet(p)}
             </div>
             <div class="md:col-span-1">
                 ${_renderModalTechStack(p)}
@@ -342,6 +342,21 @@ function _renderModalCodeSnippet(project) {
 }
 
 
+function _renderModalFrontendPreview(project) {
+  const frontendMedia = project.media && project.media.find((m) => m.type === "image" && m.src.includes("frontend"));
+  if (!frontendMedia) return "";
+  const TRANSLATIONS = getTranslations();
+  const title = TRANSLATIONS["modal_frontend_preview_title"] || "Web Client Interface (React)";
+  return `
+        <div class="mt-8 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-white">${title}</h2>
+            <div class="w-full rounded-2xl border border-white/10 overflow-hidden bg-black/60 shadow-xl">
+                <img src="${frontendMedia.src}" alt="${project.title} Frontend Preview" class="w-full h-auto object-cover" loading="lazy" />
+            </div>
+        </div>
+    `;
+}
+
 function _renderEngineeringBadges(project) {
   if (!project.isBackend || !project.engineeringBadges?.length) return "";
 
@@ -390,6 +405,8 @@ function _renderModalTechStack(project) {
 
   const baseButtonClasses =
     "pulse-btn w-full py-3 font-bold rounded-lg transition-colors flex items-center justify-center gap-2 border";
+  const secondaryButtonClasses =
+    "w-full py-3 font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-white/20 bg-zinc-950/80 hover:bg-zinc-800 text-zinc-300 hover:text-white shadow-sm hover:border-white/40";
   let platformClasses;
   if (platform === "steam") {
     platformClasses =
@@ -448,29 +465,31 @@ function _renderModalTechStack(project) {
                 ${project.stack.map((s) => `<span class="px-3 py-1 bg-black rounded-lg border border-white/10 text-xs text-white font-mono">${s}</span>`).join("")}
             </div>
             ${badgesHtml}
-            <button
-              class="${baseButtonClasses} ${platformClasses}"
-              type="button"
-              data-project-cta="primary"
-              data-project-title="${project.title}"
-              data-project-destination="${destinationType}"
-              data-project-url="${targetUrl}"
-            >
-              ${iconHtml}
-              <span>${buttonLabel}</span>
-            </button>
-            ${hasFrontend ? `
-            <button
-              class="${baseButtonClasses} ${platformClasses}"
-              type="button"
-              data-project-cta="frontend"
-              data-project-title="${project.title}"
-              data-project-destination="github"
-              data-project-url="${project.links.frontend}"
-            >
-              ${iconHtml}
-              <span>${frontendLabel}</span>
-            </button>` : ""}
+            <div class="flex flex-col gap-3">
+              <button
+                class="${baseButtonClasses} ${platformClasses}"
+                type="button"
+                data-project-cta="primary"
+                data-project-title="${project.title}"
+                data-project-destination="${destinationType}"
+                data-project-url="${targetUrl}"
+              >
+                ${iconHtml}
+                <span>${buttonLabel}</span>
+              </button>
+              ${hasFrontend ? `
+              <button
+                class="${secondaryButtonClasses}"
+                type="button"
+                data-project-cta="frontend"
+                data-project-title="${project.title}"
+                data-project-destination="github"
+                data-project-url="${project.links.frontend}"
+              >
+                ${iconHtml}
+                <span>${frontendLabel}</span>
+              </button>` : ""}
+            </div>
         </div>
     `;
 }
