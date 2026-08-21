@@ -60,7 +60,7 @@ let translationTimeline = null;
 
 export async function loadTranslations(lang, isInitialLoad = false) {
   try {
-    const response = await fetch(`i18n/${lang}.json?v=2.5`);
+    const response = await fetch(`i18n/${lang}.json?v=2.6`);
     if (!response.ok) {
       throw new Error(`Erro ao carregar tradução: ${response.statusText}`);
     }
