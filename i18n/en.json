@@ -141,6 +141,7 @@
   "modal_view_github": "View source on GitHub",
   "modal_view_github_backend": "View backend on GitHub",
   "modal_view_github_frontend": "View frontend on GitHub",
+  "modal_frontend_preview_title": "Web Client Interface (React)",
   "project5_title": "Booking Scheduler API",
   "project5_subtitle": "High-performance booking REST API with OAuth2, Redis cache and event-driven notifications",
   "project5_description": "REST API for managing service bookings and appointments (barbershops, clinics, gyms). Built with Java 21, Spring Boot 3.4, PostgreSQL, Redis, RabbitMQ and Keycloak, it enforces real conflict validation on availability windows, OAuth2 Resource Server authentication, Redis caching with automatic invalidation, and asynchronous event-driven notifications. Live docs: https://booking-scheduler-api-production.up.railway.app/swagger-ui/index.html",
@@ -162,14 +163,15 @@
     "Developed unit and integration test suites using Testcontainers to validate database operations against an ephemeral PostgreSQL instance inside GitHub Actions."
   ],
   "project8_title": "Task Manager API",
-  "project8_subtitle": "Java Spring Boot API featuring Bean Validation and immutable records",
-  "project8_description": "REST API for task management, implemented to showcase clean layered architecture, input validation, and best practices in API design using Java 17, Spring Boot 3, and H2 Database.",
-  "project8_challenge": "Ensuring payload immutability across application layers and standardizing API error responses through centralized exception handling while enforcing declarative validation rules.",
+  "project8_subtitle": "Java Spring Boot REST API with data validation and React web interface",
+  "project8_description": "REST API for task management featuring clean layered architecture, declarative Bean Validation, immutable records, and a React SPA web frontend consuming the endpoints.",
+  "project8_challenge": "Ensuring payload immutability across application layers, standardizing API error responses through centralized exception handling, and structuring seamless integration with a React client interface.",
   "project8_features": [
     "Structured controllers, services, and repositories to guarantee strict separation of concerns and database decoupling.",
     "Ensured entry and exit payload immutability through Java Record DTOs.",
     "Implemented centralized exception handling (ControllerAdvice) to standardize API error responses.",
-    "Applied declarative data validation rules using Bean Validation and documented APIs using OpenAPI/Swagger."
+    "Applied declarative data validation rules using Bean Validation and documented APIs using OpenAPI/Swagger.",
+    "Developed a React SPA frontend integrated with the REST API to demonstrate full end-to-end CRUD flows."
   ],
   "project6_title": "Order Notification Service",
   "project6_subtitle": "REST API with asynchronous event-driven architecture using RabbitMQ",

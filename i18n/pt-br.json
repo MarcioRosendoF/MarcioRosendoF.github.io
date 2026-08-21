@@ -141,6 +141,7 @@
   "modal_view_github": "Ver código no GitHub",
   "modal_view_github_backend": "Ver backend no GitHub",
   "modal_view_github_frontend": "Ver frontend no GitHub",
+  "modal_frontend_preview_title": "Interface Web (React)",
   "project5_title": "Booking Scheduler API",
   "project5_subtitle": "API REST de agendamentos com OAuth2, cache Redis e notificações orientadas a eventos",
   "project5_description": "API REST para gerenciamento de agendamentos e reservas de serviços (barbearias, consultórios, academias). Construída com Java 21, Spring Boot 3.4, PostgreSQL, Redis, RabbitMQ e Keycloak, aplica regras reais de validação de conflito de horários, autenticação OAuth2 Resource Server, cache Redis com invalidação automática e notificações assíncronas orientadas a eventos. Documentação ao vivo: https://booking-scheduler-api-production.up.railway.app/swagger-ui/index.html",
@@ -148,9 +149,9 @@
   "project5_features": [
     "Autenticação OAuth2 Resource Server via Keycloak com validação de JWT e extração de roles (PROVIDER/CLIENT).",
     "Regras de validação de conflito para janelas de disponibilidade, reservas concorrentes e janela de cancelamento de 2 horas.",
-    "Cache das consultas de disponibilidade no Redis (TTL de 5 min) com invalidação automática via @CacheEvict a cada alteração.",
-    "Eventos assíncronos de agendamento publicados no RabbitMQ e consumidos para gerar notificações (confirmado, cancelado, lembrete).",
-    "Testes com Testcontainers contra instâncias reais de PostgreSQL, Redis e RabbitMQ, além de build Docker multi-stage pronto para o Railway."
+    "Cache Redis com TTL de 15 minutos e estratégia de Cache Aside com invalidação precisa na criação e cancelamento de slots.",
+    "Notificações assíncronas via RabbitMQ para confirmação de agendamento e lembrete com dead-letter exchange (DLX).",
+    "Testes de integração com Testcontainers subindo instâncias reais de PostgreSQL, Redis e RabbitMQ."
   ],
   "project7_title": "Purchase Verified Review API",
   "project7_subtitle": "API REST com avaliações verificadas, autenticação JWT e CI/CD",
@@ -162,14 +163,15 @@
     "Desenvolvi suítes de testes unitários e de integração com Testcontainers para validar operações de banco de dados contra uma instância efêmera de PostgreSQL no GitHub Actions."
   ],
   "project8_title": "Task Manager API",
-  "project8_subtitle": "API Java Spring Boot com validação via Bean Validation e records imutáveis",
-  "project8_description": "API REST para gerenciamento de tarefas, implementada para demonstrar arquitetura limpa em camadas, validação de dados e boas práticas de design de APIs utilizando Java 17, Spring Boot 3 e banco de dados H2.",
-  "project8_challenge": "Garantir a imutabilidade do payload entre as camadas da aplicação e padronizar as respostas de erro da API por meio de tratamento centralizado de exceções, aplicando regras declarativas de validação.",
+  "project8_subtitle": "API REST em Java Spring Boot com validação de dados e interface web em React",
+  "project8_description": "API REST para gerenciamento de tarefas com arquitetura limpa em camadas, validação declarativa com Bean Validation, records imutáveis e interface SPA desenvolvida em React para consumo dos endpoints.",
+  "project8_challenge": "Garantir a imutabilidade do payload entre as camadas da aplicação, padronizar as respostas de erro da API por meio de tratamento centralizado de exceções e estruturar a comunicação fluida com uma interface cliente em React.",
   "project8_features": [
     "Estruturei a aplicação dividindo as responsabilidades de controle, processamento e persistência em camadas desacopladas.",
     "Garanti a imutabilidade dos payloads de entrada e saída por meio de DTOs baseados em Java Records.",
     "Implementei tratamento centralizado de exceções (ControllerAdvice) para padronizar as respostas de erro da API.",
-    "Apliquei regras de validação declarativa com Bean Validation e documentei as APIs com OpenAPI/Swagger."
+    "Apliquei regras de validação declarativa com Bean Validation e documentei as APIs com OpenAPI/Swagger.",
+    "Desenvolvi interface SPA em React integrada à API REST para demonstrar o fluxo completo de CRUD."
   ],
   "project6_title": "Order Notification Service",
   "project6_subtitle": "API REST com arquitetura orientada a eventos assíncronos usando RabbitMQ",
