@@ -11,6 +11,7 @@ import {
 import { initPulseAnimations } from "./effects.js";
 import { loadScript } from "./utils.js";
 import { renderTerminal, initTerminalEvents, clearActiveTerminalTimeout } from "./api-terminal.js";
+import { renderTaskManagerDemo, initTaskManagerDemo } from "./task-manager-demo.js";
 
 const modal = document.getElementById("project-modal");
 const modalContent = document.getElementById("modal-content");
@@ -152,6 +153,10 @@ export function renderModalContent(index) {
     const terminalEl = modalContent.querySelector(".api-terminal");
     if (terminalEl) {
       initTerminalEvents(terminalEl, p);
+    }
+    const demoEl = modalContent.querySelector(".task-manager-demo-root");
+    if (demoEl) {
+      initTaskManagerDemo(demoEl);
     }
   }
 
@@ -343,6 +348,9 @@ function _renderModalCodeSnippet(project) {
 
 
 function _renderModalFrontendPreview(project) {
+  if (project.title === "Task Manager API" || project.title?.includes("Task Manager")) {
+    return renderTaskManagerDemo(project);
+  }
   const frontendMedia = project.media && project.media.find((m) => m.type === "image" && m.src.includes("frontend"));
   if (!frontendMedia) return "";
   const TRANSLATIONS = getTranslations();
